@@ -26,6 +26,11 @@ describe('Database Tests', () => {
         });
     });
 
+    test('should fail to retrieve non-existent OrderHeader', async () => {
+        const orderHeader = await OrderHeader.get(999);
+        expect(orderHeader).toBeUndefined();
+    });
+
     test('Create and retrieve OrderDetail', async () => {
         const orderDetail = new OrderDetail(1, 1, 2);
         await OrderDetail.save(orderDetail);
@@ -36,5 +41,10 @@ describe('Database Tests', () => {
             product_id: 1,
             quantity: 2
         });
+    });
+
+    test('should fail to retrieve non-existent OrderDetail', async () => {
+        const orderDetail = await OrderDetail.get(999);
+        expect(orderDetail).toBeUndefined();
     });
 });

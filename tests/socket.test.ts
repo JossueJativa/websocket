@@ -75,4 +75,37 @@ describe('Socket Tests', () => {
             });
         });
     });
+
+    test('should update order status', (done) => {
+        clientSocket.emit('order:status:update', { order_header_id: 1, status: 'COMPLETED' }, (err: any, orderHeader: any) => {
+            expect(err).toBeNull();
+            expect(orderHeader).toMatchObject({
+                id: 1,
+                order_status: 'COMPLETED'
+            });
+            done();
+        });
+    });
+
+    test('should delete order detail', (done) => {
+        clientSocket.emit('order:detail:delete', { order_detail_id: 1 }, (err: any, orderDetailId: any) => {
+            expect(err).toBeNull();
+            expect(orderDetailId).toBe(1);
+            done();
+        });
+    });
+
+    test('should fail to update non-existent order detail', (done) => {
+        clientSocket.emit('order:detail:update', { order_detail_id: 999 }, (err: any, orderDetail: any) => {
+            expect(err).not.toBeNull();
+            done();
+        });
+    });
+
+    test('should fail to delete non-existent order', (done) => {
+        clientSocket.emit('order:delete', { order_header_id: 999 }, (err: any, orderHeaderId: any) => {
+            expect(err).not.toBeNull();
+            done();
+        });
+    });
 });

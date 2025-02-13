@@ -24,4 +24,12 @@ describe('Model Tests', () => {
             quantity: 2
         });
     });
+
+    test('should fail to create OrderHeader with invalid data', () => {
+        expect(() => new OrderHeader(null as any, null as any, null as any, null as any)).toThrow();
+    });
+
+    test('should fail to create OrderDetail with invalid data', () => {
+        expect(() => new OrderDetail(null as any, null as any, null as any)).toThrow();
+    });
 });
