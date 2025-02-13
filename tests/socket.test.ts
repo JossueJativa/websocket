@@ -4,13 +4,12 @@ import { createServer } from 'http';
 import { SocketController } from '../socket';
 
 describe('Socket Tests', () => {
-    let io: Server, serverSocket, clientSocket: Socket;
+    let io: Server, clientSocket: Socket;
 
     beforeAll((done) => {
         const httpServer = createServer();
         io = new Server(httpServer);
         io.on('connection', (socket) => {
-            serverSocket = socket;
             SocketController(socket);
         });
         httpServer.listen(() => {
