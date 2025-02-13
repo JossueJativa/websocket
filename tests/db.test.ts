@@ -12,8 +12,8 @@ describe('Database Tests', () => {
     });
 
     test('Create and retrieve OrderHeader', async () => {
-        const date: IDate = { year: 2023, month: 10, day: 1 };
-        const time: ITime = { hours: 12, minutes: 0, seconds: 0 };
+        const date: IDate = { year: 2025, month: 2, day: 13 };
+        const time: ITime = { hours: 14, minutes: 14, seconds: 42 };
         const orderHeader = new OrderHeader(1, time, date, 'PENDING');
         await OrderHeader.save(orderHeader);
 

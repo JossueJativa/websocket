@@ -95,6 +95,14 @@ describe('Socket Tests', () => {
         });
     });
 
+    test('should delete order', (done) => {
+        clientSocket.emit('order:delete', { order_header_id: 1 }, (err: any, orderHeaderId: any) => {
+            expect(err).toBeNull();
+            expect(orderHeaderId).toBe(1);
+            done();
+        });
+    });
+
     test('should fail to update non-existent order detail', (done) => {
         clientSocket.emit('order:detail:update', { order_detail_id: 999 }, (err: any, orderDetail: any) => {
             expect(err).not.toBeNull();
