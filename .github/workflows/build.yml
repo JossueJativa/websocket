@@ -1,4 +1,5 @@
 name: Build
+
 on:
   push:
     branches:
@@ -7,17 +8,30 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  sonarqube:
-    name: SonarQube
+  build:
+    name: Build and Test
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20.11.1'
+
       - name: Install dependencies
         run: npm install
-      - name: Test and coverage
-        run: npm run jest --coverage
+
+      - name: Compile TypeScript
+        run: npm run build
+
+      - name: Run tests and generate coverage
+        run: npm test -- --coverage
+
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v4
         env:
