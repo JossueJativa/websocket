@@ -78,6 +78,21 @@ describe('Server Control Tests', () => {
         });
     }, 10000);
 
+    test('should fail to update order status with non-existent order', (done) => {
+        const client = Client('http://localhost:3000', {
+            transports: ['websocket']
+        });
+
+        client.on('connect', () => {
+            client.emit('order:status:update', { order_header_id: 999, status: 'COMPLETED' }, (err: any, orderHeader: any) => {
+                expect(err).not.toBeNull();
+                expect(err.message).toBe('OrderHeader not found for ID: 999');
+                client.disconnect();
+                done();
+            });
+        });
+    }, 10000);
+
     // Tests for events that should fail
     test('should fail to create order with invalid data', (done) => {
         const client = Client('http://localhost:3000', {

@@ -8,12 +8,14 @@ describe('Database Tests', () => {
         await db.exec(`
             DELETE FROM order_details;
             DELETE FROM order_headers;
+            INSERT INTO order_headers (desk_id, order_time, order_date, order_status) VALUES (1, '{"hours":12,"minutes":0,"seconds":0}', '{"year":2023,"month":10,"day":1}', 'PENDING');
+            INSERT INTO order_details (order_header_id, product_id, quantity) VALUES (1, 1, 2);
         `);
     });
 
     test('Create and retrieve OrderHeader', async () => {
-        const date: IDate = { year: 2025, month: 2, day: 13 };
-        const time: ITime = { hours: 14, minutes: 14, seconds: 42 };
+        const date: IDate = { year: 2023, month: 10, day: 1 };
+        const time: ITime = { hours: 12, minutes: 0, seconds: 0 };
         const orderHeader = new OrderHeader(1, time, date, 'PENDING');
         await OrderHeader.save(orderHeader);
 
@@ -27,8 +29,7 @@ describe('Database Tests', () => {
     });
 
     test('should fail to retrieve non-existent OrderHeader', async () => {
-        const orderHeader = await OrderHeader.get(999);
-        expect(orderHeader).toBeUndefined();
+        await expect(OrderHeader.get(999)).rejects.toThrow('OrderHeader not found for ID: 999');
     });
 
     test('Create and retrieve OrderDetail', async () => {
@@ -44,7 +45,6 @@ describe('Database Tests', () => {
     });
 
     test('should fail to retrieve non-existent OrderDetail', async () => {
-        const orderDetail = await OrderDetail.get(999);
-        expect(orderDetail).toBeUndefined();
+        await expect(OrderDetail.get(999)).rejects.toThrow('OrderDetail not found for ID: 999');
     });
 });
