@@ -8,6 +8,8 @@ describe('Database Tests', () => {
         await db.exec(`
             DELETE FROM order_details;
             DELETE FROM order_headers;
+            DELETE FROM sqlite_sequence WHERE name='order_headers';
+            DELETE FROM sqlite_sequence WHERE name='order_details';
         `);
     });
 

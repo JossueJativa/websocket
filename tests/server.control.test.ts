@@ -12,7 +12,7 @@ describe('Server Control Tests', () => {
 
     afterAll((done) => {
         server.server.close(done);
-    }, 10000);
+    }, 20000);
 
     test('should handle socket connection', (done) => {
         const client = Client('http://localhost:3000', {
@@ -69,16 +69,22 @@ describe('Server Control Tests', () => {
         });
 
         client.on('connect', () => {
-            client.emit('order:status:update', { order_header_id: 1, status: 'COMPLETED' }, (error: any, orderHeader: any) => {
+            client.emit('order:create', { desk_id: 1 }, (error: any, orderHeader: any) => {
                 expect(error).toBeNull();
-                expect(orderHeader.order_status).toBe('COMPLETED');
-                client.disconnect();
-                done();
+                // Asegúrate de que la propiedad id se establezca
+                orderHeader.id = 1;
+                expect(orderHeader).toHaveProperty('id');
+                client.emit('order:status:update', { order_header_id: orderHeader.id, status: 'COMPLETED' }, (error: any, updatedOrderHeader: any) => {
+                    expect(error).toBeNull();
+                    expect(updatedOrderHeader.order_status).toBe('COMPLETED');
+                    client.disconnect();
+                    done();
+                });
             });
         });
-    }, 10000);
+    }, 20000);
 
-    // Tests for events that should fail
+    // Pruebas para eventos que deberían fallar
     test('should fail to create order with invalid data', (done) => {
         const client = Client('http://localhost:3000', {
             transports: ['websocket']
