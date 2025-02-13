@@ -48,6 +48,9 @@ class OrderHeader {
     static async get(order_id: number) {
         const db = await dbPromise;
         const order = await db.get(`SELECT * FROM order_headers WHERE id = ?`, order_id);
+        if (!order) {
+            throw new Error(`OrderHeader not found for ID: ${order_id}`);
+        }
         return order;
     }
 }
@@ -94,6 +97,9 @@ class OrderDetail {
     static async get(order_id: number) {
         const db = await dbPromise;
         const order = await db.get(`SELECT * FROM order_details WHERE id = ?`, order_id);
+        if (!order) {
+            throw new Error(`OrderDetail not found for ID: ${order_id}`);
+        }
         console.log('OrderDetail retrieved:', order, 'for ID:', order_id);
         return order;
     }
