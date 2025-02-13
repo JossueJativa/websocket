@@ -45,7 +45,7 @@ const SocketController = (socket: Socket) => {
         try {
             const orderDetail = await OrderDetail.get(data.order_detail_id);
             if (!orderDetail) {
-                throw new Error('OrderDetail not found');
+                throw new Error(`OrderDetail not found for ID: ${data.order_detail_id}`);
             }
             await OrderDetail.delete(data.order_detail_id);
 
@@ -60,7 +60,7 @@ const SocketController = (socket: Socket) => {
         try {
             const orderDetail = await OrderDetail.get(data.order_detail_id);
             if (!orderDetail) {
-                throw new Error('OrderDetail not found');
+                throw new Error(`OrderDetail not found for ID: ${data.order_detail_id}`);
             }
             await OrderDetail.update(orderDetail, orderDetail.id);
 
@@ -75,7 +75,7 @@ const SocketController = (socket: Socket) => {
         try {
             const orderHeader = await OrderHeader.get(data.order_header_id);
             if (!orderHeader) {
-                throw new Error('OrderHeader not found');
+                throw new Error(`OrderHeader not found for ID: ${data.order_header_id}`);
             }
             orderHeader.order_status = data.status;
             await OrderHeader.update(orderHeader, orderHeader.id);
@@ -91,7 +91,7 @@ const SocketController = (socket: Socket) => {
         try {
             const orderHeader = await OrderHeader.get(data.order_header_id);
             if (!orderHeader) {
-                throw new Error('OrderHeader not found');
+                throw new Error(`OrderHeader not found for ID: ${data.order_header_id}`);
             }
             await OrderHeader.delete(data.order_header_id);
 
