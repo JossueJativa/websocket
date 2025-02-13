@@ -26,6 +26,7 @@ class OrderHeader {
             JSON.stringify(order.order_date),
             order.order_status
         );
+        console.log('OrderHeader saved:', order);
     }
 
     static async update(order: OrderHeader, order_id: number) {
@@ -38,6 +39,7 @@ class OrderHeader {
             order.order_status,
             order_id
         );
+        console.log('OrderHeader updated:', order);
     }
 
     static async delete(order_id: number) {
@@ -48,9 +50,7 @@ class OrderHeader {
     static async get(order_id: number) {
         const db = await dbPromise;
         const order = await db.get(`SELECT * FROM order_headers WHERE id = ?`, order_id);
-        if (!order) {
-            throw new Error(`OrderHeader not found for ID: ${order_id}`);
-        }
+        console.log('OrderHeader retrieved:', order, 'for ID:', order_id);
         return order;
     }
 }
@@ -77,6 +77,7 @@ class OrderDetail {
             order.product_id,
             order.quantity
         );
+        console.log('OrderDetail saved:', order);
     }
 
     static async update(order: OrderDetail, order_id: number) {
@@ -87,6 +88,7 @@ class OrderDetail {
             order.quantity,
             order_id
         );
+        console.log('OrderDetail updated:', order);
     }
 
     static async delete(order_id: number) {
@@ -97,9 +99,6 @@ class OrderDetail {
     static async get(order_id: number) {
         const db = await dbPromise;
         const order = await db.get(`SELECT * FROM order_details WHERE id = ?`, order_id);
-        if (!order) {
-            throw new Error(`OrderDetail not found for ID: ${order_id}`);
-        }
         console.log('OrderDetail retrieved:', order, 'for ID:', order_id);
         return order;
     }

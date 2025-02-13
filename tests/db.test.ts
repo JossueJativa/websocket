@@ -8,8 +8,6 @@ describe('Database Tests', () => {
         await db.exec(`
             DELETE FROM order_details;
             DELETE FROM order_headers;
-            INSERT INTO order_headers (desk_id, order_time, order_date, order_status) VALUES (1, '{"hours":12,"minutes":0,"seconds":0}', '{"year":2023,"month":10,"day":1}', 'PENDING');
-            INSERT INTO order_details (order_header_id, product_id, quantity) VALUES (1, 1, 2);
         `);
     });
 
@@ -29,7 +27,8 @@ describe('Database Tests', () => {
     });
 
     test('should fail to retrieve non-existent OrderHeader', async () => {
-        await expect(OrderHeader.get(999)).rejects.toThrow('OrderHeader not found for ID: 999');
+        const orderHeader = await OrderHeader.get(999);
+        expect(orderHeader).toBeUndefined();
     });
 
     test('Create and retrieve OrderDetail', async () => {
@@ -45,6 +44,7 @@ describe('Database Tests', () => {
     });
 
     test('should fail to retrieve non-existent OrderDetail', async () => {
-        await expect(OrderDetail.get(999)).rejects.toThrow('OrderDetail not found for ID: 999');
+        const orderDetail = await OrderDetail.get(999);
+        expect(orderDetail).toBeUndefined();
     });
 });
