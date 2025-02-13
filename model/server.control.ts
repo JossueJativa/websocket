@@ -7,10 +7,10 @@ import { SocketController } from '../socket';
 import '../db/init';
 
 class Server {
-    private app: express.Application;
-    private port: string;
-    private server: http.Server;
-    private io: ServerSocket;
+    readonly app: express.Application;
+    readonly port: string;
+    readonly server: http.Server;
+    readonly io: ServerSocket;
 
     constructor() {
         this.app = express();
