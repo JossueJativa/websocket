@@ -1,0 +1,1 @@
+export { dbPromise } from './database';
