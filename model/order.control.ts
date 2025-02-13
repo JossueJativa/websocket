@@ -39,6 +39,7 @@ class OrderHeader {
             order.order_status,
             order_id
         );
+        console.log('OrderHeader updated:', order);
     }
 
     static async delete(order_id: number) {
@@ -87,6 +88,7 @@ class OrderDetail {
             order.quantity,
             order_id
         );
+        console.log('OrderDetail updated:', order);
     }
 
     static async delete(order_id: number) {
