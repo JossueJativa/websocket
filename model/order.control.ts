@@ -8,6 +8,9 @@ class OrderHeader {
     order_status: string;
 
     constructor(desk_id: number, order_time: ITime, order_date: IDate, order_status: string) {
+        if (!desk_id || !order_time || !order_date || !order_status) {
+            throw new Error('Invalid data');
+        }
         this.desk_id = desk_id;
         this.order_time = order_time;
         this.order_date = order_date;
@@ -57,6 +60,9 @@ class OrderDetail {
     quantity: number;
 
     constructor(order_header_id: number, product_id: number, quantity: number) {
+        if (!order_header_id || !product_id || !quantity) {
+            throw new Error('Invalid data');
+        }
         this.order_header_id = order_header_id;
         this.product_id = product_id;
         this.quantity = quantity;

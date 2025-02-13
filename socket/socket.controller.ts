@@ -67,7 +67,10 @@ const SocketController = (socket: Socket) => {
     socket.on('order:status:update', async (data, callback) => {
         try {
             const orderHeader = await OrderHeader.get(data.order_header_id);
-            orderHeader.status = data.status;
+            if (!orderHeader) {
+                throw new Error('OrderHeader not found');
+            }
+            orderHeader.order_status = data.status;
             await OrderHeader.update(orderHeader, orderHeader.id);
 
             socket.broadcast.emit('order:status:updated', orderHeader);
@@ -79,6 +82,10 @@ const SocketController = (socket: Socket) => {
 
     socket.on('order:delete', async (data, callback) => {
         try {
+            const orderHeader = await OrderHeader.get(data.order_header_id);
+            if (!orderHeader) {
+                throw new Error('OrderHeader not found');
+            }
             await OrderHeader.delete(data.order_header_id);
 
             socket.broadcast.emit('order:deleted', data.order_header_id);
