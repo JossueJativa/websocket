@@ -19,5 +19,4 @@ import { dbPromise } from './database';
             FOREIGN KEY(order_header_id) REFERENCES order_headers(id)
         );
     `);
-    console.log('Database initialized');
 })();
