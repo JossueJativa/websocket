@@ -4,7 +4,7 @@ import { createServer } from 'http';
 import { SocketController } from '../socket';
 
 describe('Socket Tests', () => {
-    let io: Server, clientSocket: Socket;
+    let io: Server, clientSocket1: Socket, clientSocket2: Socket;
 
     beforeAll((done) => {
         const httpServer = createServer();
@@ -15,18 +15,27 @@ describe('Socket Tests', () => {
         httpServer.listen(() => {
             const address = httpServer.address();
             const port = (address as any).port;
-            clientSocket = Client(`http://localhost:${port}`);
-            clientSocket.on('connect', done);
+            clientSocket1 = Client(`http://localhost:${port}`);
+            clientSocket2 = Client(`http://localhost:${port}`);
+            let connectedCount = 0;
+            const onConnect = () => {
+                connectedCount++;
+                if (connectedCount === 2) done();
+            };
+            clientSocket1.on('connect', onConnect);
+            clientSocket2.on('connect', onConnect);
         });
     });
 
-    afterAll(() => {
+    afterAll((done) => {
         io.close();
-        clientSocket.close();
+        clientSocket1.close();
+        clientSocket2.close();
+        done();
     });
 
     test('should create order', (done) => {
-        clientSocket.emit('order:create', { desk_id: 1 }, (err: any, orderHeader: any) => {
+        clientSocket1.emit('order:create', { desk_id: 1 }, (err: any, orderHeader: any) => {
             expect(err).toBeNull();
             expect(orderHeader).toMatchObject({
                 desk_id: 1,
@@ -37,7 +46,7 @@ describe('Socket Tests', () => {
     });
 
     test('should create order detail', (done) => {
-        clientSocket.emit('order:detail:create', { order_header_id: 1, product_id: 1, quantity: 2 }, (err: any, orderDetail: any) => {
+        clientSocket1.emit('order:detail:create', { order_header_id: 1, product_id: 1, quantity: 2 }, (err: any, orderDetail: any) => {
             expect(err).toBeNull();
             expect(orderDetail).toMatchObject({
                 order_header_id: 1,
@@ -49,14 +58,14 @@ describe('Socket Tests', () => {
     });
 
     test('should fail to create order with invalid desk_id', (done) => {
-        clientSocket.emit('order:create', { desk_id: null }, (err: any, orderHeader: any) => {
+        clientSocket1.emit('order:create', { desk_id: null }, (err: any, orderHeader: any) => {
             expect(err).not.toBeNull();
             done();
         });
     });
 
     test('should create multiple order details', (done) => {
-        clientSocket.emit('order:detail:create', { order_header_id: 1, product_id: 1, quantity: 2 }, (err: any, orderDetail: any) => {
+        clientSocket1.emit('order:detail:create', { order_header_id: 1, product_id: 1, quantity: 2 }, (err: any, orderDetail: any) => {
             expect(err).toBeNull();
             expect(orderDetail).toMatchObject({
                 order_header_id: 1,
@@ -64,7 +73,7 @@ describe('Socket Tests', () => {
                 quantity: 2
             });
 
-            clientSocket.emit('order:detail:create', { order_header_id: 1, product_id: 2, quantity: 3 }, (err: any, orderDetail: any) => {
+            clientSocket1.emit('order:detail:create', { order_header_id: 1, product_id: 2, quantity: 3 }, (err: any, orderDetail: any) => {
                 expect(err).toBeNull();
                 expect(orderDetail).toMatchObject({
                     order_header_id: 1,
@@ -77,7 +86,7 @@ describe('Socket Tests', () => {
     });
 
     test('should update order status', (done) => {
-        clientSocket.emit('order:status:update', { order_header_id: 1, status: 'COMPLETED' }, (err: any, orderHeader: any) => {
+        clientSocket1.emit('order:status:update', { order_header_id: 1, status: 'COMPLETED' }, (err: any, orderHeader: any) => {
             expect(err).toBeNull();
             expect(orderHeader).toMatchObject({
                 id: 1,
@@ -88,7 +97,7 @@ describe('Socket Tests', () => {
     });
 
     test('should delete order detail', (done) => {
-        clientSocket.emit('order:detail:delete', { order_detail_id: 1 }, (err: any, orderDetailId: any) => {
+        clientSocket1.emit('order:detail:delete', { order_detail_id: 1 }, (err: any, orderDetailId: any) => {
             expect(err).toBeNull();
             expect(orderDetailId).toBe(1);
             done();
@@ -96,7 +105,7 @@ describe('Socket Tests', () => {
     });
 
     test('should delete order', (done) => {
-        clientSocket.emit('order:delete', { order_header_id: 1 }, (err: any, orderHeaderId: any) => {
+        clientSocket1.emit('order:delete', { order_header_id: 1 }, (err: any, orderHeaderId: any) => {
             expect(err).toBeNull();
             expect(orderHeaderId).toBe(1);
             done();
@@ -104,46 +113,46 @@ describe('Socket Tests', () => {
     });
 
     test('should fail to update non-existent order detail', (done) => {
-        clientSocket.emit('order:detail:update', { order_detail_id: 999 }, (err: any, orderDetail: any) => {
+        clientSocket1.emit('order:detail:update', { order_detail_id: 999 }, (err: any, orderDetail: any) => {
             expect(err).not.toBeNull();
             expect(err.message).toBe('OrderDetail not found');
             done();
         });
-    }, 10000);
+    });
 
     test('should fail to update order status with non-existent order', (done) => {
-        clientSocket.emit('order:status:update', { order_header_id: 999, status: 'COMPLETED' }, (err: any, orderHeader: any) => {
+        clientSocket1.emit('order:status:update', { order_header_id: 999, status: 'COMPLETED' }, (err: any, orderHeader: any) => {
             expect(err).not.toBeNull();
             expect(err.message).toBe('OrderHeader not found');
             done();
         });
-    }, 10000);
+    });
 
     test('should fail to delete non-existent order detail', (done) => {
-        clientSocket.emit('order:detail:delete', { order_detail_id: 999 }, (err: any, orderDetailId: any) => {
+        clientSocket1.emit('order:detail:delete', { order_detail_id: 999 }, (err: any, orderDetailId: any) => {
             expect(err).not.toBeNull();
             expect(err.message).toBe('OrderDetail not found');
             done();
         });
-    }, 10000);
+    });
 
     test('should fail to delete non-existent order', (done) => {
-        clientSocket.emit('order:delete', { order_header_id: 999 }, (err: any, orderHeaderId: any) => {
+        clientSocket1.emit('order:delete', { order_header_id: 999 }, (err: any, orderHeaderId: any) => {
             expect(err).not.toBeNull();
             expect(err.message).toBe('OrderHeader not found');
             done();
         });
-    }, 10000);
+    });
 
     test('should fail to delete non-existent order detail', (done) => {
-        clientSocket.emit('order:detail:delete', { order_detail_id: 999 }, (err: any, orderDetailId: any) => {
+        clientSocket1.emit('order:detail:delete', { order_detail_id: 999 }, (err: any, orderDetailId: any) => {
             expect(err).not.toBeNull();
             done();
         });
     });
 
     test('should fail to delete non-existent order', (done) => {
-        clientSocket.emit('order:delete', { order_header_id: 999 }, (err: any, orderHeaderId: any) => {
+        clientSocket1.emit('order:delete', { order_header_id: 999 }, (err: any, orderHeaderId: any) => {
             expect(err).not.toBeNull();
             done();
         });

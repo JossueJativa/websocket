@@ -1,5 +1,5 @@
 import { Server } from '../model/server.control';
-import { io as Client } from 'socket.io-client';
+import { io as Client, io } from 'socket.io-client';
 
 describe('Server Control Tests', () => {
     let server: Server;
@@ -10,9 +10,9 @@ describe('Server Control Tests', () => {
         done();
     });
 
-    afterAll((done) => {
-        server.server.close(done);
-    }, 20000);
+    afterAll(async () => {
+        await new Promise((resolve) => server.server.close(resolve));
+    }, 10000);     
 
     test('should handle socket connection', (done) => {
         const client = Client('http://localhost:3000', {
@@ -24,7 +24,7 @@ describe('Server Control Tests', () => {
             client.disconnect();
             done();
         });
-    }, 10000);
+    });
 
     test('should handle order:create event', (done) => {
         const client = Client('http://localhost:3000', {
@@ -42,7 +42,7 @@ describe('Server Control Tests', () => {
                 done();
             });
         });
-    }, 10000);
+    });
 
     test('should handle order:detail:create event', (done) => {
         const client = Client('http://localhost:3000', {
@@ -61,7 +61,7 @@ describe('Server Control Tests', () => {
                 done();
             });
         });
-    }, 10000);
+    });
 
     // Pruebas para eventos que deberían fallar
     test('should fail to create order with invalid data', (done) => {
@@ -77,7 +77,7 @@ describe('Server Control Tests', () => {
                 done();
             });
         });
-    }, 10000);
+    });
 
     test('should fail to create order detail with invalid data', (done) => {
         const client = Client('http://localhost:3000', {
@@ -92,7 +92,7 @@ describe('Server Control Tests', () => {
                 done();
             });
         });
-    }, 10000);
+    });
 
     test('should fail to update order status with invalid data', (done) => {
         const client = Client('http://localhost:3000', {
@@ -107,5 +107,38 @@ describe('Server Control Tests', () => {
                 done();
             });
         });
-    }, 10000);
+    });
+
+    test('should not receive messages for desk_id 2 on desk_id 1', (done) => {
+        const client1 = Client('http://localhost:3000', {
+            transports: ['websocket']
+        });
+
+        const client2 = Client('http://localhost:3000', {
+            transports: ['websocket']
+        });
+
+        client1.on('connect', () => {
+            client2.on('connect', () => {
+                client2.emit('order:create', { desk_id: 2 }, (error: any, orderHeader: any) => {
+                    expect(error).toBeNull();
+                    expect(orderHeader).toMatchObject({
+                        desk_id: 2,
+                        order_status: 'PENDING'
+                    });
+
+                    client1.on('order:create', (data: any) => {
+                        // This should not be called
+                        expect(data).toBeUndefined();
+                    });
+
+                    setTimeout(() => {
+                        client1.disconnect();
+                        client2.disconnect();
+                        done();
+                    }, 1000);
+                });
+            });
+        });
+    });
 });
