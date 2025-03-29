@@ -1,5 +1,5 @@
 import { Server } from '../model/server.control';
-import { io as Client, io } from 'socket.io-client';
+import { io as Client } from 'socket.io-client';
 
 describe('Server Control Tests', () => {
     let server: Server;
@@ -12,7 +12,7 @@ describe('Server Control Tests', () => {
 
     afterAll(async () => {
         await new Promise((resolve) => server.server.close(resolve));
-    }, 10000);     
+    }, 10000);
 
     test('should handle socket connection', (done) => {
         const client = Client('http://localhost:3000', {
@@ -26,17 +26,31 @@ describe('Server Control Tests', () => {
         });
     });
 
+    test('should handle join:desk event', (done) => {
+        const client = Client('http://localhost:3000', {
+            transports: ['websocket']
+        });
+
+        client.on('connect', () => {
+            client.emit('join:desk', 1, () => {
+                client.disconnect();
+                done();
+            });
+        });
+    });
+
     test('should handle order:create event', (done) => {
         const client = Client('http://localhost:3000', {
             transports: ['websocket']
         });
 
         client.on('connect', () => {
-            client.emit('order:create', { desk_id: 1 }, (error: any, orderHeader: any) => {
+            client.emit('order:create', { product_id: 1, quantity: 2, desk_id: 1 }, (error: any, orderDetail: any) => {
                 expect(error).toBeNull();
-                expect(orderHeader).toMatchObject({
-                    desk_id: 1,
-                    order_status: 'PENDING'
+                expect(orderDetail).toMatchObject({
+                    product_id: 1,
+                    quantity: 2,
+                    desk_id: 1
                 });
                 client.disconnect();
                 done();
@@ -44,18 +58,31 @@ describe('Server Control Tests', () => {
         });
     });
 
-    test('should handle order:detail:create event', (done) => {
+    test('should handle order:get event', (done) => {
         const client = Client('http://localhost:3000', {
             transports: ['websocket']
         });
 
         client.on('connect', () => {
-            client.emit('order:detail:create', { order_header_id: 1, product_id: 1, quantity: 2 }, (error: any, orderDetail: any) => {
+            client.emit('order:get', { desk_id: 1 }, (error: any, orderDetails: any) => {
+                expect(error).toBeNull();
+                expect(orderDetails).toBeInstanceOf(Array);
+                client.disconnect();
+                done();
+            });
+        });
+    });
+
+    test('should handle order:update event', (done) => {
+        const client = Client('http://localhost:3000', {
+            transports: ['websocket']
+        });
+
+        client.on('connect', () => {
+            client.emit('order:update', { order_detail_id: 1, desk_id: 1 }, (error: any, orderDetail: any) => {
                 expect(error).toBeNull();
                 expect(orderDetail).toMatchObject({
-                    order_header_id: 1,
-                    product_id: 1,
-                    quantity: 2
+                    id: 1
                 });
                 client.disconnect();
                 done();
@@ -63,29 +90,43 @@ describe('Server Control Tests', () => {
         });
     });
 
-    // Pruebas para eventos que deberían fallar
+    test('should handle order:delete event', (done) => {
+        const client = Client('http://localhost:3000', {
+            transports: ['websocket']
+        });
+
+        client.on('connect', () => {
+            client.emit('order:delete', { order_detail_id: 1, desk_id: 1 }, (error: any, orderDetailId: any) => {
+                expect(error).toBeNull();
+                expect(orderDetailId).toBe(1);
+                client.disconnect();
+                done();
+            });
+        });
+    });
+
+    test('should handle order:delete:all event', (done) => {
+        const client = Client('http://localhost:3000', {
+            transports: ['websocket']
+        });
+
+        client.on('connect', () => {
+            client.emit('order:delete:all', { desk_id: 1 }, (error: any, deskId: any) => {
+                expect(error).toBeNull();
+                expect(deskId).toBe(1);
+                client.disconnect();
+                done();
+            });
+        });
+    });
+
     test('should fail to create order with invalid data', (done) => {
         const client = Client('http://localhost:3000', {
             transports: ['websocket']
         });
 
         client.on('connect', () => {
-            client.emit('order:create', { desk_id: null }, (error: any, orderHeader: any) => {
-                expect(error).not.toBeNull();
-                expect(orderHeader).toBeUndefined();
-                client.disconnect();
-                done();
-            });
-        });
-    });
-
-    test('should fail to create order detail with invalid data', (done) => {
-        const client = Client('http://localhost:3000', {
-            transports: ['websocket']
-        });
-
-        client.on('connect', () => {
-            client.emit('order:detail:create', { order_header_id: null, product_id: null, quantity: null }, (error: any, orderDetail: any) => {
+            client.emit('order:create', { desk_id: null }, (error: any, orderDetail: any) => {
                 expect(error).not.toBeNull();
                 expect(orderDetail).toBeUndefined();
                 client.disconnect();
@@ -94,15 +135,15 @@ describe('Server Control Tests', () => {
         });
     });
 
-    test('should fail to update order status with invalid data', (done) => {
+    test('should fail to update order with invalid data', (done) => {
         const client = Client('http://localhost:3000', {
             transports: ['websocket']
         });
 
         client.on('connect', () => {
-            client.emit('order:status:update', { order_header_id: null, status: 'COMPLETED' }, (error: any, orderHeader: any) => {
+            client.emit('order:update', { order_detail_id: null, desk_id: 1 }, (error: any, orderDetail: any) => {
                 expect(error).not.toBeNull();
-                expect(orderHeader).toBeUndefined();
+                expect(orderDetail).toBeUndefined();
                 client.disconnect();
                 done();
             });
@@ -120,14 +161,15 @@ describe('Server Control Tests', () => {
 
         client1.on('connect', () => {
             client2.on('connect', () => {
-                client2.emit('order:create', { desk_id: 2 }, (error: any, orderHeader: any) => {
+                client2.emit('order:create', { product_id: 1, quantity: 2, desk_id: 2 }, (error: any, orderDetail: any) => {
                     expect(error).toBeNull();
-                    expect(orderHeader).toMatchObject({
-                        desk_id: 2,
-                        order_status: 'PENDING'
+                    expect(orderDetail).toMatchObject({
+                        product_id: 1,
+                        quantity: 2,
+                        desk_id: 2
                     });
 
-                    client1.on('order:create', (data: any) => {
+                    client1.on('order:created', (data: any) => {
                         // This should not be called
                         expect(data).toBeUndefined();
                     });

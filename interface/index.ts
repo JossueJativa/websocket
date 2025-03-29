@@ -1,1 +1,0 @@
-export { IDate, ITime, IDateTime } from './datetime.interface';

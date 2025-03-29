@@ -1,32 +1,15 @@
-import { OrderHeader, OrderDetail } from '../model';
-import { IDate, ITime } from '../interface';
+import { OrderDetail } from '../model';
 
 describe('Model Tests', () => {
-    test('OrderHeader model', () => {
-        const date: IDate = { year: 2023, month: 10, day: 1 };
-        const time: ITime = { hours: 12, minutes: 0, seconds: 0 };
-        const orderHeader = new OrderHeader(1, time, date, 'PENDING');
-
-        expect(orderHeader).toMatchObject({
-            desk_id: 1,
-            order_time: time,
-            order_date: date,
-            order_status: 'PENDING'
-        });
-    });
 
     test('OrderDetail model', () => {
         const orderDetail = new OrderDetail(1, 1, 2);
 
         expect(orderDetail).toMatchObject({
-            order_header_id: 1,
             product_id: 1,
-            quantity: 2
+            quantity: 1,
+            desk_id: 2
         });
-    });
-
-    test('should fail to create OrderHeader with invalid data', () => {
-        expect(() => new OrderHeader(null as any, null as any, null as any, null as any)).toThrowError('Invalid data');
     });
 
     test('should fail to create OrderDetail with invalid data', () => {
