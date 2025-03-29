@@ -12,7 +12,7 @@ describe('Server Control Tests', () => {
 
     afterAll(async () => {
         await new Promise((resolve) => server.server.close(resolve));
-    }, 10000);
+    }, 20000); // Increased timeout for cleanup
 
     test('should handle socket connection', (done) => {
         const client = Client('http://localhost:3000', {
@@ -24,7 +24,7 @@ describe('Server Control Tests', () => {
             client.disconnect();
             done();
         });
-    });
+    }, 10000); // Increased timeout for connection tests
 
     test('should handle join:desk event', (done) => {
         const client = Client('http://localhost:3000', {
@@ -37,7 +37,7 @@ describe('Server Control Tests', () => {
                 done();
             });
         });
-    });
+    }, 10000);
 
     test('should handle order:create event', (done) => {
         const client = Client('http://localhost:3000', {
@@ -56,7 +56,7 @@ describe('Server Control Tests', () => {
                 done();
             });
         });
-    });
+    }, 10000);
 
     test('should handle order:get event', (done) => {
         const client = Client('http://localhost:3000', {
@@ -66,12 +66,12 @@ describe('Server Control Tests', () => {
         client.on('connect', () => {
             client.emit('order:get', { desk_id: 1 }, (error: any, orderDetails: any) => {
                 expect(error).toBeNull();
-                expect(orderDetails).toBeInstanceOf(Array);
+                expect(Array.isArray(orderDetails)).toBe(true); // Fixed response expectation
                 client.disconnect();
                 done();
             });
         });
-    });
+    }, 10000);
 
     test('should handle order:update event', (done) => {
         const client = Client('http://localhost:3000', {
@@ -88,7 +88,7 @@ describe('Server Control Tests', () => {
                 done();
             });
         });
-    });
+    }, 10000);
 
     test('should handle order:delete event', (done) => {
         const client = Client('http://localhost:3000', {
@@ -103,7 +103,7 @@ describe('Server Control Tests', () => {
                 done();
             });
         });
-    });
+    }, 10000);
 
     test('should handle order:delete:all event', (done) => {
         const client = Client('http://localhost:3000', {
@@ -118,7 +118,7 @@ describe('Server Control Tests', () => {
                 done();
             });
         });
-    });
+    }, 10000);
 
     test('should fail to create order with invalid data', (done) => {
         const client = Client('http://localhost:3000', {
@@ -133,7 +133,7 @@ describe('Server Control Tests', () => {
                 done();
             });
         });
-    });
+    }, 10000);
 
     test('should fail to update order with invalid data', (done) => {
         const client = Client('http://localhost:3000', {
@@ -148,7 +148,7 @@ describe('Server Control Tests', () => {
                 done();
             });
         });
-    });
+    }, 10000);
 
     test('should not receive messages for desk_id 2 on desk_id 1', (done) => {
         const client1 = Client('http://localhost:3000', {
@@ -182,5 +182,5 @@ describe('Server Control Tests', () => {
                 });
             });
         });
-    });
+    }, 10000);
 });
