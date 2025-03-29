@@ -18,3 +18,19 @@ describe('Server Control Tests', () => {
         expect(middlewares.length).toBeGreaterThan(0);
     });
 });
+
+describe('Server tests', () => {
+    it('should initialize and listen on the specified port', (done) => {
+        const server = new Server();
+        const mockListen = jest.spyOn(server.server, 'listen').mockImplementation((port: any, callback?: () => void) => {
+            if (callback) callback();
+            return server.server;
+        });
+
+        server.listen();
+
+        expect(mockListen).toHaveBeenCalledWith('3000', expect.any(Function));
+        mockListen.mockRestore();
+        done();
+    });
+});
