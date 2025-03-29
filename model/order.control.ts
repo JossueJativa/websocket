@@ -39,9 +39,10 @@ class OrderDetail {
         await db.run(`DELETE FROM order_details WHERE id = ?`, order_id);
     }
 
-    static async deleteAll(desk_id: number) {
+    static async deleteAll(desk_id: number): Promise<number> {
         const db = await dbPromise;
-        await db.run(`DELETE FROM order_details WHERE desk_id = ?`, desk_id);
+        const result = await db.run(`DELETE FROM order_details WHERE desk_id = ?`, desk_id);
+        return result.changes ?? 0; // Return the number of rows affected
     }
 
     static async get(order_details_id: number) {

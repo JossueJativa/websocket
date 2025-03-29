@@ -133,13 +133,30 @@ describe('SocketController tests', () => {
     });    
 
     it('should delete all orders', (done) => {
-        (OrderDetail.delete as jest.Mock).mockResolvedValue(deskId);
-        (OrderDetail.getAll as jest.Mock).mockResolvedValue([]);
+        (OrderDetail.deleteAll as jest.Mock).mockResolvedValue(3); // Simulate 3 rows deleted
 
         clientSocket.emit('order:delete:all', { desk_id: deskId }, (error: any, response: any) => {
-            expect(error).toBeNull();
-            expect(response).toBe(deskId);
-            done();
+            try {
+                expect(error).toBeNull();
+                expect(response).toEqual({ desk_id: deskId, rowsDeleted: 3 });
+                done();
+            } catch (err) {
+                done(err);
+            }
+        });
+    });
+
+    it('should fail to delete all orders when no orders are found', (done) => {
+        (OrderDetail.deleteAll as jest.Mock).mockResolvedValue(0); // Simulate no rows deleted
+
+        clientSocket.emit('order:delete:all', { desk_id: deskId }, (error: any, response: any) => {
+            try {
+                expect(error).toEqual({ message: 'No orders found to delete for the specified desk' });
+                expect(response).toBeNull();
+                done();
+            } catch (err) {
+                done(err);
+            }
         });
     });
 });

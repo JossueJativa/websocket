@@ -31,7 +31,10 @@ const SocketController = (socket: Socket) => {
             }
 
             const orderDetails = await OrderDetail.getAll(desk_id);
-            if (!orderDetails) throw new Error('No orders found for this desk');
+            if (!orderDetails) {
+                callback({ message: 'No orders found for the specified desk' }, null);
+                return;
+            }
 
             socket.to(desk_id).emit('order:details', orderDetails);
             callback(null, orderDetails);
@@ -87,11 +90,20 @@ const SocketController = (socket: Socket) => {
     socket.on('order:delete:all', async (data, callback) => {
         const { desk_id } = data;
         try {
-            await OrderDetail.deleteAll(desk_id);
-            socket.to(desk_id).emit('order:deleted:all', desk_id);
-            callback(null, desk_id);
+            if (!desk_id) {
+                callback({ message: 'Desk ID is required' }, null);
+                return;
+            }
+
+            const rowsDeleted = await OrderDetail.deleteAll(desk_id);
+            if (rowsDeleted > 0) {
+                socket.to(desk_id).emit('order:deleted:all', desk_id);
+                callback(null, { desk_id, rowsDeleted }); // Send success response
+            } else {
+                callback({ message: 'No orders found to delete for the specified desk' }, null); // Send error if no rows deleted
+            }
         } catch (error: any) {
-            callback({ message: error.message });
+            callback({ message: error.message }, null);
         }
     });
 
