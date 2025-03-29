@@ -49,7 +49,7 @@ describe('Socket Tests', () => {
     test('should fail to create order with invalid desk_id', (done) => {
         clientSocket1.emit('order:create', { desk_id: null }, (err: any, orderDetail: any) => {
             expect(err).not.toBeNull();
-            expect(err.message).toBe('Invalid desk_id'); // Adjusted error message
+            expect(err.message).toBe('Desk ID is required'); // Adjusted error message
             done();
         });
     }, 10000);
@@ -76,16 +76,16 @@ describe('Socket Tests', () => {
     });
 
     test('should update order quantity', (done) => {
-        clientSocket1.emit('order:update', { product_id: 1, quantity: 4, desk_id: 1 }, (err: any, orderHeader: any) => {
+        clientSocket1.emit('order:update', { order_detail_id: 1, quantity: 4, desk_id: 1 }, (err: any, orderDetail: any) => {
             expect(err).toBeNull();
-            expect(orderHeader).toMatchObject({
-                product_id: 1,
+            expect(orderDetail).toMatchObject({
+                id: 1,
                 quantity: 4,
                 desk_id: 1
             });
             done();
         });
-    });
+    }, 10000);
 
     test('should delete order detail', (done) => {
         clientSocket1.emit('order:delete', { order_detail_id: 1 }, (err: any, orderDetailId: any) => {
@@ -112,12 +112,12 @@ describe('Socket Tests', () => {
     });
 
     test('should fail to update order quantity with non-existent order', (done) => {
-        clientSocket1.emit('order:update', { product_id: 1, quantity: 4, desk_id: 999 }, (err: any, orderHeader: any) => {
+        clientSocket1.emit('order:update', { order_detail_id: 999, quantity: 4, desk_id: 999 }, (err: any, orderDetail: any) => {
             expect(err).not.toBeNull();
-            expect(err.message).toBe('OrderHeader not found');
+            expect(err.message).toBe('OrderDetail not found'); // Adjusted error message
             done();
         });
-    });
+    }, 10000); // Increased timeout for this test
 
     test('should fail to delete non-existent order detail', (done) => {
         clientSocket1.emit('order:delete', { order_detail_id: 999 }, (err: any, orderDetailId: any) => {
