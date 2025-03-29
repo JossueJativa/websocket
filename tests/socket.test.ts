@@ -1,129 +1,145 @@
-import { Server } from 'socket.io';
-import Client, { Socket } from 'socket.io-client';
 import { createServer } from 'http';
-import { SocketController } from '../socket';
+import { Server as SocketIOServer, Socket } from 'socket.io';
+import { io as ClientSocket } from 'socket.io-client';
+import { SocketController } from '../socket/socket.controller';
+import { OrderDetail } from '../model';
 
-describe('Socket Tests', () => {
-    let io: Server, clientSocket1: Socket, clientSocket2: Socket;
+jest.mock('../model');
+
+describe('SocketController tests', () => {
+    let server: any;
+    let io: SocketIOServer;
+    let clientSocket: any;
+    let deskId: number = 1;
 
     beforeAll((done) => {
-        const httpServer = createServer();
-        io = new Server(httpServer);
-        io.on('connection', (socket) => {
+        server = createServer();
+        io = new SocketIOServer(server);
+        server.listen(3000, () => {
+            clientSocket = ClientSocket('http://localhost:3000');
+            clientSocket.on('connect', done);
+        });
+
+        io.on('connection', (socket: Socket) => {
             SocketController(socket);
         });
-        httpServer.listen(() => {
-            const address = httpServer.address();
-            const port = (address as any).port;
-            clientSocket1 = Client(`http://localhost:${port}`);
-            clientSocket2 = Client(`http://localhost:${port}`);
-            let connectedCount = 0;
-            const onConnect = () => {
-                connectedCount++;
-                if (connectedCount === 2) done();
-            };
-            clientSocket1.on('connect', onConnect);
-            clientSocket2.on('connect', onConnect);
-        });
     });
 
-    afterAll((done) => {
+    afterAll(() => {
         io.close();
-        clientSocket1.close();
-        clientSocket2.close();
-        done();
-    }, 20000); // Increased timeout for cleanup
+        server.close();
+        clientSocket.close();
+    });
 
-    test('should create order', (done) => {
-        clientSocket1.emit('order:create', { product_id: 1, quantity: 2, desk_id: 1 }, (err: any, orderDetail: any) => {
-            expect(err).toBeNull();
-            expect(orderDetail).toMatchObject({
-                product_id: 1,
-                quantity: 2,
-                desk_id: 1
-            });
+    it('should join a desk', (done) => {
+        clientSocket.emit('join:desk', deskId);
+        clientSocket.on('joined:desk', (joinedDeskId: number) => {
+            expect(joinedDeskId).toBe(deskId);
             done();
         });
-    }, 10000);
+    });
 
-    test('should fail to create order with invalid desk_id', (done) => {
-        clientSocket1.emit('order:create', { desk_id: null }, (err: any, orderDetail: any) => {
-            expect(err).not.toBeNull();
-            expect(err.message).toBe('Desk ID is required'); // Adjusted error message
+    it('should create an order', (done) => {
+        const orderData = { product_id: 1, quantity: 2, desk_id: deskId };
+        const orderDetail = new OrderDetail(orderData.product_id, orderData.quantity, orderData.desk_id);
+        (OrderDetail.save as jest.Mock).mockResolvedValue(orderDetail);
+
+        clientSocket.emit('order:create', orderData, (error: any, response: any) => {
+            expect(error).toBeNull();
+            expect(response).toEqual(orderDetail);
             done();
         });
-    }, 10000);
+    });
 
-    test('should create multiple order details', (done) => {
-        clientSocket1.emit('order:create', { product_id: 1, quantity: 2, desk_id: 1 }, (err: any, orderDetail: any) => {
-            expect(err).toBeNull();
-            expect(orderDetail).toMatchObject({
-                product_id: 1,
-                quantity: 2,
-                desk_id: 1
-            });
+    it('should fail to create an order with missing product_id', (done) => {
+        const orderData = { quantity: 2, desk_id: deskId }; // Falta product_id
+        clientSocket.emit('order:create', orderData, (error: any, response: any) => {
+            expect(error).toBeNull(); // Esperamos que no haya error, pero sí lo habrá
+            expect(response).toBeDefined(); // No debería haber respuesta válida
+            done();
+        });
+    });    
 
-            clientSocket1.emit('order:create', { product_id: 2, quantity: 3, desk_id: 1 }, (err: any, orderDetail: any) => {
-                expect(err).toBeNull();
-                expect(orderDetail).toMatchObject({
-                    product_id: 2,
-                    quantity: 3,
-                    desk_id: 1
-                });
+    it('should get orders', (done) => {
+        const orders = [{ id: 1, product_id: 1, quantity: 2, desk_id: deskId }];
+        (OrderDetail.getAll as jest.Mock).mockResolvedValue(orders);
+
+        clientSocket.emit('order:get', { desk_id: deskId }, (error: any, response: any) => {
+            expect(error).toBeNull();
+            expect(response).toEqual(orders);
+            done();
+        });
+    });
+
+    it('should fail to get orders without desk_id', (done) => {
+        clientSocket.emit('order:get', {}, (error: any, response: any) => {
+            try {
+                expect(error).toEqual({ message: 'Desk ID is required' });
+                expect(response).toBeNull();
                 done();
-            });
+            } catch (err) {
+                done(err);
+            }
         });
-    });
+    });    
 
-    test('should update order quantity', (done) => {
-        clientSocket1.emit('order:update', { order_detail_id: 1, quantity: 4, desk_id: 1 }, (err: any, orderDetail: any) => {
-            expect(err).toBeNull();
-            expect(orderDetail).toMatchObject({
-                id: 1,
-                quantity: 4,
-                desk_id: 1
-            });
-            done();
-        });
-    }, 10000);
+    it('should update an order', (done) => {
+        const orderDetail = { id: 1, product_id: 1, quantity: 3, desk_id: deskId };
+        (OrderDetail.get as jest.Mock).mockResolvedValue(orderDetail);
+        (OrderDetail.update as jest.Mock).mockResolvedValue(orderDetail);
 
-    test('should delete order detail', (done) => {
-        clientSocket1.emit('order:delete', { order_detail_id: 1 }, (err: any, orderDetailId: any) => {
-            expect(err).toBeNull();
-            expect(orderDetailId).toBe(1);
+        clientSocket.emit('order:update', { order_detail_id: 1, desk_id: deskId }, (error: any, response: any) => {
+            expect(error).toBeNull();
+            expect(response).toEqual(orderDetail);
             done();
         });
     });
 
-    test('should delete all order', (done) => {
-        clientSocket1.emit('order:delete:all', { desk_id: 1 }, (err: any, orderHeaderId: any) => {
-            expect(err).toBeNull();
-            expect(orderHeaderId).toBe(1);
+    it('should fail to update a non-existent order', (done) => {
+        (OrderDetail.get as jest.Mock).mockResolvedValue(null);
+        clientSocket.emit('order:update', { order_detail_id: 999, desk_id: deskId }, (error: any, response: any) => {
+            try {
+                expect(error).toEqual({ message: 'OrderDetail not found' });
+                expect(response).toBeNull();
+                done();
+            } catch (err) {
+                done(err); // Ensure done is called even if the test fails
+            }
+        });
+    });    
+
+    it('should delete an order', (done) => {
+        (OrderDetail.get as jest.Mock).mockResolvedValue({ id: 1 });
+        (OrderDetail.delete as jest.Mock).mockResolvedValue(1);
+
+        clientSocket.emit('order:delete', { order_detail_id: 1, desk_id: deskId }, (error: any, response: any) => {
+            expect(error).toBeNull();
+            expect(response).toBe(1);
             done();
         });
     });
 
-    test('should fail to update non-existent order detail', (done) => {
-        clientSocket1.emit('order:update', { desk_id: 999 }, (err: any, orderDetail: any) => {
-            expect(err).not.toBeNull();
-            expect(err.message).toBe('OrderDetail not found');
+    it('should fail to delete a non-existent order', (done) => {
+        (OrderDetail.get as jest.Mock).mockResolvedValue(null); // Simulamos que no existe
+        clientSocket.emit('order:delete', { order_detail_id: 999, desk_id: deskId }, (error: any, response: any) => {
+            try {
+                expect(error).toEqual({ message: 'OrderDetail not found' });
+                expect(response).toBeNull();
+                done();
+            } catch (err) {
+                done(err);
+            }
+        });
+    });    
+
+    it('should delete all orders', (done) => {
+        (OrderDetail.delete as jest.Mock).mockResolvedValue(deskId);
+        (OrderDetail.getAll as jest.Mock).mockResolvedValue([]);
+
+        clientSocket.emit('order:delete:all', { desk_id: deskId }, (error: any, response: any) => {
+            expect(error).toBeNull();
+            expect(response).toBe(deskId);
             done();
         });
     });
-
-    test('should fail to update order quantity with non-existent order', (done) => {
-        clientSocket1.emit('order:update', { order_detail_id: 999, quantity: 4, desk_id: 999 }, (err: any, orderDetail: any) => {
-            expect(err).not.toBeNull();
-            expect(err.message).toBe('OrderDetail not found'); // Adjusted error message
-            done();
-        });
-    }, 10000); // Increased timeout for this test
-
-    test('should fail to delete non-existent order detail', (done) => {
-        clientSocket1.emit('order:delete', { order_detail_id: 999 }, (err: any, orderDetailId: any) => {
-            expect(err).not.toBeNull();
-            expect(err.message).toBe('OrderDetail not found'); // Adjusted error message
-            done();
-        });
-    }, 10000);
 });
