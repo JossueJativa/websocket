@@ -7,6 +7,7 @@ jest.mock('../model', () => ({
         get: jest.fn(),
         getAll: jest.fn(),
         deleteAll: jest.fn(),
+        update: jest.fn(),
     },
 }));
 
@@ -46,6 +47,24 @@ describe('SocketController tests', () => {
         await createHandler({ product_id: null, quantity: 2, desk_id: 1 }, callback);
 
         expect(callback).toHaveBeenCalledWith(expect.any(Error));
+    });
+
+    it('should update an existing order when product_id matches', async () => {
+        SocketController(mockSocket as Socket);
+
+        const createHandler = (mockSocket.on as jest.Mock).mock.calls.find(call => call[0] === 'order:create')[1];
+        const callback = jest.fn();
+        const existingOrder = { id: 1, product_id: '123', quantity: 2 };
+
+        (OrderDetail.getAll as jest.Mock).mockResolvedValue([existingOrder]);
+        (OrderDetail.update as jest.Mock).mockResolvedValue(true);
+
+        await createHandler({ product_id: '123', quantity: 3, desk_id: 'desk1' }, callback);
+
+        expect(existingOrder.quantity).toBe(5); // Quantity updated
+        expect(OrderDetail.update).toHaveBeenCalledWith(existingOrder, existingOrder.id);
+        expect(mockSocket.to).toHaveBeenCalledWith('desk1');
+        expect(callback).toHaveBeenCalledWith(null, existingOrder);
     });
 
     it('should handle order:get event with missing desk_id', async () => {
