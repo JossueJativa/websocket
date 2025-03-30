@@ -53,8 +53,8 @@ class OrderDetail {
 
     static async getAll(desk_id: number) {
         const db = await dbPromise;
-        const order = await db.get(`SELECT * FROM order_details WHERE desk_id = ?`, desk_id);
-        return order;
+        const orders = await db.all(`SELECT * FROM order_details WHERE desk_id = ?`, desk_id);
+        return orders;
     }
 }
 

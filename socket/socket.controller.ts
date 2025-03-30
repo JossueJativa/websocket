@@ -9,6 +9,18 @@ const validateDeskId = (desk_id: string, callback: Function): boolean => {
     return true;
 };
 
+const handleExistingOrder = async (getOrderDetail: any[], product_id: string, quantity: number, desk_id: string, socket: Socket, callback: Function) => {
+    const existingOrder = getOrderDetail.find((order: any) => order.product_id === product_id);
+    if (existingOrder) {
+        existingOrder.quantity += quantity;
+        await OrderDetail.update(existingOrder, existingOrder.id);
+        socket.to(desk_id).emit('order:updated', existingOrder);
+        callback(null, existingOrder);
+        return true;
+    }
+    return false;
+};
+
 const SocketController = (socket: Socket) => {
     console.log('New connection', socket.id);
 
@@ -20,6 +32,11 @@ const SocketController = (socket: Socket) => {
     socket.on('order:create', async (data, callback) => {
         const { product_id, quantity, desk_id } = data;
         try {
+            const getOrderDetail = await OrderDetail.getAll(desk_id);
+            if (getOrderDetail) {
+                const handled = await handleExistingOrder(getOrderDetail, product_id, quantity, desk_id, socket, callback);
+                if (handled) return;
+            }
             const orderDetail = new OrderDetail(product_id, quantity, desk_id);
             await OrderDetail.save(orderDetail);
 
@@ -49,7 +66,7 @@ const SocketController = (socket: Socket) => {
     });
 
     socket.on('order:update', async (data, callback) => {
-        const { order_detail_id, desk_id } = data;
+        const { order_detail_id, desk_id, update_quantity } = data;
         if (!validateDeskId(desk_id, callback)) return;
 
         try {
@@ -58,7 +75,7 @@ const SocketController = (socket: Socket) => {
                 callback({ message: 'OrderDetail not found' }, null);
                 return;
             }
-
+            orderDetail.quantity = update_quantity;
             await OrderDetail.update(orderDetail, orderDetail.id);
             socket.to(desk_id).emit('order:detail:updated', orderDetail);
             callback(null, orderDetail);
