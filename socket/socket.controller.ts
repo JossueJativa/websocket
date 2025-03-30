@@ -1,6 +1,14 @@
 import { Socket } from 'socket.io';
 import { OrderDetail } from '../model';
 
+const validateDeskId = (desk_id: string, callback: Function): boolean => {
+    if (!desk_id) {
+        callback({ message: 'Desk ID is required' }, null);
+        return false;
+    }
+    return true;
+};
+
 const SocketController = (socket: Socket) => {
     console.log('New connection', socket.id);
 
@@ -24,12 +32,9 @@ const SocketController = (socket: Socket) => {
 
     socket.on('order:get', async (data, callback) => {
         const { desk_id } = data;
-        try {
-            if (!desk_id) {
-                callback({ message: 'Desk ID is required' }, null);
-                return;
-            }
+        if (!validateDeskId(desk_id, callback)) return;
 
+        try {
             const orderDetails = await OrderDetail.getAll(desk_id);
             if (!orderDetails) {
                 callback({ message: 'No orders found for the specified desk' }, null);
@@ -45,12 +50,9 @@ const SocketController = (socket: Socket) => {
 
     socket.on('order:update', async (data, callback) => {
         const { order_detail_id, desk_id } = data;
-        try {
-            if (!desk_id) {
-                callback({ message: 'Desk ID is required' }, null);
-                return;
-            }
+        if (!validateDeskId(desk_id, callback)) return;
 
+        try {
             const orderDetail = await OrderDetail.get(order_detail_id);
             if (!orderDetail) {
                 callback({ message: 'OrderDetail not found' }, null);
@@ -67,12 +69,9 @@ const SocketController = (socket: Socket) => {
 
     socket.on('order:delete', async (data, callback) => {
         const { order_detail_id, desk_id } = data;
-        try {
-            if (!desk_id) {
-                callback({ message: 'Desk ID is required' }, null);
-                return;
-            }
+        if (!validateDeskId(desk_id, callback)) return;
 
+        try {
             const orderDetail = await OrderDetail.get(order_detail_id);
             if (!orderDetail) {
                 callback({ message: 'OrderDetail not found' }, null);
@@ -89,18 +88,15 @@ const SocketController = (socket: Socket) => {
 
     socket.on('order:delete:all', async (data, callback) => {
         const { desk_id } = data;
-        try {
-            if (!desk_id) {
-                callback({ message: 'Desk ID is required' }, null);
-                return;
-            }
+        if (!validateDeskId(desk_id, callback)) return;
 
+        try {
             const rowsDeleted = await OrderDetail.deleteAll(desk_id);
             if (rowsDeleted > 0) {
                 socket.to(desk_id).emit('order:deleted:all', desk_id);
-                callback(null, { desk_id, rowsDeleted }); // Send success response
+                callback(null, { desk_id, rowsDeleted });
             } else {
-                callback({ message: 'No orders found to delete for the specified desk' }, null); // Send error if no rows deleted
+                callback({ message: 'No orders found to delete for the specified desk' }, null);
             }
         } catch (error: any) {
             callback({ message: error.message }, null);
