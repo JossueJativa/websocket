@@ -5,8 +5,8 @@ import { OrderDetail } from '../model';
 jest.mock('../model', () => ({
     OrderDetail: {
         get: jest.fn(),
-        getAll: jest.fn(), // Ensure getAll is mocked
-        deleteAll: jest.fn(), // Ensure deleteAll is mocked
+        getAll: jest.fn(),
+        deleteAll: jest.fn(),
     },
 }));
 
@@ -159,6 +159,17 @@ describe('SocketController tests', () => {
         await deleteAllHandler({ desk_id: 1 }, callback);
 
         expect(callback).toHaveBeenCalledWith({ message: 'No orders found to delete for the specified desk' }, null);
+    });
+
+    it('should handle order:delete:all event with missing desk_id', async () => {
+        SocketController(mockSocket as Socket);
+
+        const deleteAllHandler = (mockSocket.on as jest.Mock).mock.calls.find(call => call[0] === 'order:delete:all')[1];
+        const callback = jest.fn();
+
+        await deleteAllHandler({}, callback);
+
+        expect(callback).toHaveBeenCalledWith({ message: 'Desk ID is required' }, null);
     });
 
     it('should handle disconnect event', () => {
