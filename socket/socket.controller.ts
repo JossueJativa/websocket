@@ -39,8 +39,9 @@ const SocketController = (socket: Socket) => {
             }
             const orderDetail = new OrderDetail(product_id, quantity, desk_id);
             await OrderDetail.save(orderDetail);
-
-            socket.to(desk_id).emit('order:created', orderDetail);
+            const updatedOrderDetails = await OrderDetail.getAll(desk_id);
+            socket.to(desk_id).emit('order:details', updatedOrderDetails);
+    
             callback(null, orderDetail);
         } catch (error) {
             callback(error);
