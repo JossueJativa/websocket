@@ -9,12 +9,14 @@ const validateDeskId = (desk_id: string, callback: Function): boolean => {
     return true;
 };
 
-const handleExistingOrder = async (getOrderDetail: any[], product_id: string, quantity: number, desk_id: string, socket: Socket, callback: Function) => {
+const handleExistingOrder = async (getOrderDetail: any[], product_id: string, quantity: number, desk_id: number, socket: Socket, callback: Function) => {
     const existingOrder = getOrderDetail.find((order: any) => order.product_id === product_id);
     if (existingOrder) {
         existingOrder.quantity += quantity;
         await OrderDetail.update(existingOrder, existingOrder.id);
-        socket.to(desk_id).emit('order:updated', existingOrder);
+        
+        // Emit updated order to all clients in the desk
+        socket.to(`${desk_id}`).emit('order:details', await OrderDetail.getAll(desk_id));
         callback(null, existingOrder);
         return true;
     }
@@ -31,14 +33,17 @@ const SocketController = (socket: Socket) => {
 
     socket.on('order:create', async (data, callback) => {
         const { product_id, quantity, desk_id } = data;
+
         try {
             const getOrderDetail = await OrderDetail.getAll(desk_id);
             if (getOrderDetail) {
                 const handled = await handleExistingOrder(getOrderDetail, product_id, quantity, desk_id, socket, callback);
                 if (handled) return;
             }
+
             const orderDetail = new OrderDetail(product_id, quantity, desk_id);
             await OrderDetail.save(orderDetail);
+
             const updatedOrderDetails = await OrderDetail.getAll(desk_id);
             socket.to(desk_id).emit('order:details', updatedOrderDetails);
     
@@ -59,7 +64,6 @@ const SocketController = (socket: Socket) => {
                 return;
             }
 
-            socket.to(desk_id).emit('order:details', orderDetails);
             callback(null, orderDetails);
         } catch (error: any) {
             callback({ message: error.message }, null);
@@ -76,9 +80,13 @@ const SocketController = (socket: Socket) => {
                 callback({ message: 'OrderDetail not found' }, null);
                 return;
             }
+            
             orderDetail.quantity = update_quantity;
             await OrderDetail.update(orderDetail, orderDetail.id);
-            socket.to(desk_id).emit('order:detail:updated', orderDetail);
+            
+            const updatedOrderDetails = await OrderDetail.getAll(desk_id);
+            socket.to(desk_id).emit('order:details', updatedOrderDetails);
+            
             callback(null, orderDetail);
         } catch (error: any) {
             callback({ message: error.message }, null);
@@ -97,7 +105,10 @@ const SocketController = (socket: Socket) => {
             }
 
             await OrderDetail.delete(order_detail_id);
-            socket.to(desk_id).emit('order:deleted', order_detail_id);
+            
+            const updatedOrderDetails = await OrderDetail.getAll(desk_id);
+            socket.to(desk_id).emit('order:details', updatedOrderDetails);
+
             callback(null, order_detail_id);
         } catch (error: any) {
             callback({ message: error.message }, null);
