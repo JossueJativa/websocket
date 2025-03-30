@@ -5,6 +5,7 @@ jest.mock('../db', () => ({
     dbPromise: Promise.resolve({
         run: jest.fn(),
         get: jest.fn(),
+        all: jest.fn(), // Agregar el método `all` al mock
     }),
 }));
 
@@ -70,11 +71,11 @@ describe('OrderDetail Controller', () => {
     });
 
     test('should get all orders for a desk', async () => {
-        dbMock.get.mockResolvedValue([{ id: 1, product_id: 1, quantity: 2, desk_id: 3 }]);
+        dbMock.all.mockResolvedValue([{ id: 1, product_id: 1, quantity: 2, desk_id: 3 }]);
         const orders = await OrderDetail.getAll(3);
-        expect(dbMock.get).toHaveBeenCalledWith(
+        expect(dbMock.all).toHaveBeenCalledWith(
             `SELECT * FROM order_details WHERE desk_id = ?`,
-            3
+            [3]
         );
         expect(orders).toEqual([{ id: 1, product_id: 1, quantity: 2, desk_id: 3 }]);
     });
