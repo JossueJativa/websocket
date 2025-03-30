@@ -109,6 +109,17 @@ describe('SocketController tests', () => {
         expect(callback).toHaveBeenCalledWith({ message: 'OrderDetail not found' }, null);
     });
 
+    it('should handle order:delete event with missing desk_id', async () => {
+        SocketController(mockSocket as Socket);
+
+        const deleteHandler = (mockSocket.on as jest.Mock).mock.calls.find(call => call[0] === 'order:delete')[1];
+        const callback = jest.fn();
+
+        await deleteHandler({ order_detail_id: 1 }, callback);
+
+        expect(callback).toHaveBeenCalledWith({ message: 'Desk ID is required' }, null);
+    });
+
     it('should handle order:delete:all event', async () => {
         SocketController(mockSocket as Socket);
 
