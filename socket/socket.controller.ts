@@ -25,7 +25,7 @@ const handleExistingOrder = async (
                     existingOrder.product_id,
                     quantity,
                     desk_id,
-                    garrison ? garrison : null
+                    garrison
                 );
                 await OrderDetail.save(newOrderDetail);
                 socket.to(`${desk_id}`).emit('order:details', await OrderDetail.getAll(desk_id));

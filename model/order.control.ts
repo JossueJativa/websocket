@@ -51,7 +51,7 @@ class OrderDetail {
     static async get(order_details_id: number) {
         const db = await dbPromise;
         const order = await db.get(`SELECT * FROM order_details WHERE id = ?`, order_details_id);
-        if (order && order.garrison) {
+        if (order?.garrison) {
             order.garrison = JSON.parse(order.garrison);
         }
         return order;
