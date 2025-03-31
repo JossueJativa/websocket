@@ -32,7 +32,7 @@ const SocketController = (socket: Socket) => {
     });
 
     socket.on('order:create', async (data, callback) => {
-        const { product_id, quantity, desk_id } = data;
+        const { product_id, quantity, desk_id, garrison } = data;
 
         try {
             const getOrderDetail = await OrderDetail.getAll(desk_id);
@@ -41,12 +41,14 @@ const SocketController = (socket: Socket) => {
                 if (handled) return;
             }
 
-            const orderDetail = new OrderDetail(product_id, quantity, desk_id);
+            const parsedGarrison = garrison ? JSON.parse(garrison) : null;
+            const orderDetail = new OrderDetail(product_id, quantity, desk_id, parsedGarrison);
             await OrderDetail.save(orderDetail);
 
             const updatedOrderDetails = await OrderDetail.getAll(desk_id);
             socket.to(desk_id).emit('order:details', updatedOrderDetails);
     
+            console.log("Order created:", orderDetail);
             callback(null, orderDetail);
         } catch (error) {
             callback(error);
@@ -71,7 +73,7 @@ const SocketController = (socket: Socket) => {
     });
 
     socket.on('order:update', async (data, callback) => {
-        const { order_detail_id, desk_id, update_quantity } = data;
+        const { order_detail_id, desk_id, update_quantity, garrison } = data;
         if (!validateDeskId(desk_id, callback)) return;
 
         try {
@@ -82,12 +84,13 @@ const SocketController = (socket: Socket) => {
             }
             
             orderDetail.quantity = update_quantity;
+            orderDetail.garrison = garrison ? JSON.stringify(garrison) : null;
             await OrderDetail.update(orderDetail, orderDetail.id);
             
             const updatedOrderDetails = await OrderDetail.getAll(desk_id);
             socket.to(desk_id).emit('order:details', updatedOrderDetails);
             
-            callback(null, orderDetail);
+            callback(null, { ...orderDetail, garrison: garrison });
         } catch (error: any) {
             callback({ message: error.message }, null);
         }

@@ -7,7 +7,8 @@ import { dbPromise } from './database';
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             product_id INTEGER NOT NULL,
             quantity INTEGER NOT NULL,
-            desk_id INTEGER NOT NULL
+            desk_id INTEGER NOT NULL,
+            garrison TEXT DEFAULT NULL
         );
     `);
 })();
