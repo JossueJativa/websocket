@@ -88,6 +88,72 @@ describe('SocketController tests', () => {
         });
     });
 
+    it('should be update an order with garrison', (done) => {
+        const orderData = {
+            product_id: 1,
+            quantity: 2,
+            desk_id: deskId,
+            garrison: JSON.stringify([1, 2])
+        };
+        
+        const orderDetail = new OrderDetail(
+            orderData.product_id,
+            orderData.quantity,
+            orderData.desk_id,
+            [1, 2]
+        );
+        
+        (OrderDetail.get as jest.Mock).mockResolvedValue(orderDetail);
+        (OrderDetail.update as jest.Mock).mockResolvedValue(orderDetail);
+    
+        clientSocket.emit('order:update', { order_detail_id: 1, desk_id: deskId, update_quantity: 3, garrison: null }, (error: any, response: any) => {
+            try {
+                expect(error).toBeNull();
+                expect(response).toEqual({
+                    ...orderDetail,
+                    quantity: 3,
+                    garrison: null
+                });
+                done();
+            } catch (err) {
+                done(err); // Aseguramos que `done` se llame incluso si hay un error
+            }
+        });
+    });
+
+    it('should create a new order if the garrison is different', (done) => {
+        const orderData = {
+            product_id: 1,
+            quantity: 2,
+            desk_id: deskId,
+            garrison: JSON.stringify([1, 2])
+        };
+        
+        const orderDetail = new OrderDetail(
+            orderData.product_id,
+            orderData.quantity,
+            orderData.desk_id,
+            [1, 2]
+        );
+        
+        (OrderDetail.get as jest.Mock).mockResolvedValue(orderDetail);
+        (OrderDetail.update as jest.Mock).mockResolvedValue(orderDetail);
+    
+        clientSocket.emit('order:update', { order_detail_id: 1, desk_id: deskId, update_quantity: 3, garrison: JSON.stringify([3]) }, (error: any, response: any) => {
+            try {
+                expect(error).toBeNull();
+                expect(response).toEqual({
+                    ...orderDetail,
+                    quantity: 3,
+                    garrison: '[3]'
+                });
+                done();
+            } catch (err) {
+                done(err); // Aseguramos que `done` se llame incluso si hay un error
+            }
+        });
+    });
+
     it('should get orders', (done) => {
         const orders = [{ id: 1, product_id: 1, quantity: 2, desk_id: deskId }];
         (OrderDetail.getAll as jest.Mock).mockResolvedValue(orders);
