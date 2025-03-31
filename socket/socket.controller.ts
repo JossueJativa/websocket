@@ -9,12 +9,33 @@ const validateDeskId = (desk_id: string, callback: Function): boolean => {
     return true;
 };
 
-const handleExistingOrder = async (getOrderDetail: any[], product_id: string, quantity: number, desk_id: number, socket: Socket, callback: Function) => {
+const handleExistingOrder = async (
+    getOrderDetail: any[], product_id: string,
+    quantity: number, desk_id: number,
+    garrison: number[] | null,
+    socket: Socket, callback: Function
+) => {
     const existingOrder = getOrderDetail.find((order: any) => order.product_id === product_id);
     if (existingOrder) {
+        if (existingOrder.garrison) {
+            const garrisons = existingOrder.garrison;
+            if (!(garrison && garrisons.length === garrison.length && garrisons.every((val: number) => garrison.includes(val)))) {
+                // Si los garrisons son distintos, creamos una nueva orden
+                const newOrderDetail = new OrderDetail(
+                    existingOrder.product_id,
+                    quantity,
+                    desk_id,
+                    garrison ? garrison : null
+                );
+                await OrderDetail.save(newOrderDetail);
+                socket.to(`${desk_id}`).emit('order:details', await OrderDetail.getAll(desk_id));
+                callback(null, newOrderDetail);
+                return true;
+            }
+        }
         existingOrder.quantity += quantity;
         await OrderDetail.update(existingOrder, existingOrder.id);
-        
+
         // Emit updated order to all clients in the desk
         socket.to(`${desk_id}`).emit('order:details', await OrderDetail.getAll(desk_id));
         callback(null, existingOrder);
@@ -37,18 +58,16 @@ const SocketController = (socket: Socket) => {
         try {
             const getOrderDetail = await OrderDetail.getAll(desk_id);
             if (getOrderDetail) {
-                const handled = await handleExistingOrder(getOrderDetail, product_id, quantity, desk_id, socket, callback);
+                const handled = await handleExistingOrder(getOrderDetail, product_id, quantity, desk_id, garrison, socket, callback);
                 if (handled) return;
             }
 
-            const parsedGarrison = garrison ? JSON.parse(garrison) : null;
-            const orderDetail = new OrderDetail(product_id, quantity, desk_id, parsedGarrison);
+            const orderDetail = new OrderDetail(product_id, quantity, desk_id, garrison);
             await OrderDetail.save(orderDetail);
 
             const updatedOrderDetails = await OrderDetail.getAll(desk_id);
             socket.to(desk_id).emit('order:details', updatedOrderDetails);
-    
-            console.log("Order created:", orderDetail);
+
             callback(null, orderDetail);
         } catch (error) {
             callback(error);
@@ -82,14 +101,14 @@ const SocketController = (socket: Socket) => {
                 callback({ message: 'OrderDetail not found' }, null);
                 return;
             }
-            
+
             orderDetail.quantity = update_quantity;
             orderDetail.garrison = garrison ? JSON.stringify(garrison) : null;
             await OrderDetail.update(orderDetail, orderDetail.id);
-            
+
             const updatedOrderDetails = await OrderDetail.getAll(desk_id);
             socket.to(desk_id).emit('order:details', updatedOrderDetails);
-            
+
             callback(null, { ...orderDetail, garrison: garrison });
         } catch (error: any) {
             callback({ message: error.message }, null);
@@ -108,7 +127,7 @@ const SocketController = (socket: Socket) => {
             }
 
             await OrderDetail.delete(order_detail_id);
-            
+
             const updatedOrderDetails = await OrderDetail.getAll(desk_id);
             socket.to(desk_id).emit('order:details', updatedOrderDetails);
 
