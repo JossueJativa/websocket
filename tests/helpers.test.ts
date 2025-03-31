@@ -1,6 +1,4 @@
-// Primero mockeamos el módulo antes de cualquier importación
 jest.mock('../model', () => {
-    // Aquí creamos mocks inline para evitar problemas de referencia
     return {
         OrderDetail: class {
             product_id: number;
@@ -18,7 +16,6 @@ jest.mock('../model', () => {
                 this.garrison = garrison;
             }
 
-            // Creamos los mocks directamente aquí
             static save = jest.fn().mockResolvedValue(undefined);
             static update = jest.fn().mockResolvedValue(undefined);
             static delete = jest.fn().mockResolvedValue(undefined);
@@ -29,12 +26,10 @@ jest.mock('../model', () => {
     };
 });
 
-// Luego importamos todo lo que necesitamos
 import { Socket } from 'socket.io';
 import { OrderDetail } from '../model';
 import { validateDeskId, handleExistingOrder } from '../helpers';
 
-// Obtenemos referencias a los mocks para usarlos en los tests
 const mockSave = OrderDetail.save as jest.Mock;
 const mockUpdate = OrderDetail.update as jest.Mock;
 const mockGetAll = OrderDetail.getAll as jest.Mock;
@@ -76,7 +71,6 @@ describe('handleExistingOrder', () => {
             emit: jest.fn()
         };
         mockCallback = jest.fn();
-        // Limpiar los mocks entre pruebas
         jest.clearAllMocks();
     });
 
