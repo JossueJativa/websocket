@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "start": "node src/app.js"
+    "start": "node src/app.js",
+    "deploy": "netlify deploy --prod --dir=build --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID"
   },
   "repository": {
     "type": "git",
