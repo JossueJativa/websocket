@@ -9,18 +9,17 @@ jobs:
   build:
     name: Build and Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      actions: write
 
     steps:
-      - name: delete database
-        run: rm -rf /db/database.sqlite
-        
       - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '20'
 
@@ -47,8 +46,3 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: admincontroller
         run: npm test -- --coverage
-
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
