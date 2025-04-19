@@ -34,4 +34,3 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: admincontroller
         run: npm test
-        working-directory: ./websocket
