@@ -25,7 +25,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./websocket
 
       - name: Run tests
         env:
