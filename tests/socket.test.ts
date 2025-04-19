@@ -3,6 +3,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { io as ClientSocket } from 'socket.io-client';
 import { SocketController } from '../socket/socket.controller';
 import { OrderDetail } from '../model';
+import { pool } from '../db';
 
 jest.mock('../model');
 
@@ -15,8 +16,8 @@ describe('SocketController tests', () => {
     beforeAll((done) => {
         server = createServer();
         io = new SocketIOServer(server);
-        server.listen(3000, () => {
-            clientSocket = ClientSocket('http://localhost:3000');
+        server.listen(3001, () => { // Use a different port for testing
+            clientSocket = ClientSocket('http://localhost:3001');
             clientSocket.on('connect', done);
         });
 
@@ -25,10 +26,11 @@ describe('SocketController tests', () => {
         });
     });
 
-    afterAll(() => {
+    afterAll((done) => {
         io.close();
-        server.close();
+        server.close(done);
         clientSocket.close();
+        pool.end(); // Ensure database connections are closed
     });
 
     it('should join a desk', (done) => {

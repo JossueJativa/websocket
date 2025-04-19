@@ -1,13 +1,16 @@
-import { dbPromise } from '../db/database';
+import { pool } from '../db';
 import { OrderDetail } from '../model';
 
 describe('Database Tests', () => {
-    beforeAll(async () => {
-        const db = await dbPromise;
-        await db.exec(`
-            DELETE FROM order_details;
-            DELETE FROM sqlite_sequence WHERE name='order_details';
-        `);
+    afterAll(async () => {
+        const client = await pool.connect();
+        try {
+            await client.query('DELETE FROM order_details;');
+            await client.query('ALTER SEQUENCE order_details_id_seq RESTART WITH 1;');
+        } finally {
+            client.release();
+        }
+        await pool.end();
     });
 
     test('Create and retrieve OrderDetail', async () => {

@@ -1,4 +1,4 @@
-import { dbPromise } from '../db';
+import { pool } from '../db';
 
 class OrderDetail {
     product_id: number;
@@ -17,40 +17,36 @@ class OrderDetail {
     }
 
     static async save(order: OrderDetail) {
-        const db = await dbPromise;
-        await db.run(
-            `INSERT INTO order_details (product_id, quantity, desk_id, garrison) VALUES (?, ?, ?, ?)`,
-            order.product_id,
-            order.quantity,
-            order.desk_id,
-            order.garrison ? JSON.stringify(order.garrison) : null
+        await pool.query(
+            `INSERT INTO order_details (product_id, quantity, desk_id, garrison) VALUES ($1, $2, $3, $4)`,
+            [
+                order.product_id,
+                order.quantity,
+                order.desk_id,
+                order.garrison ? JSON.stringify(order.garrison) : null
+            ]
         );
-    }    
+    }
 
     static async update(order: OrderDetail, order_id: number) {
-        const db = await dbPromise;
-        await db.run(
-            `UPDATE order_details SET product_id = ?, quantity = ? WHERE id = ?`,
-            order.product_id,
-            order.quantity,
-            order_id
+        await pool.query(
+            `UPDATE order_details SET product_id = $1, quantity = $2 WHERE id = $3`,
+            [order.product_id, order.quantity, order_id]
         );
     }
 
     static async delete(order_id: number) {
-        const db = await dbPromise;
-        await db.run(`DELETE FROM order_details WHERE id = ?`, order_id);
+        await pool.query(`DELETE FROM order_details WHERE id = $1`, [order_id]);
     }
 
     static async deleteAll(desk_id: number): Promise<number> {
-        const db = await dbPromise;
-        const result = await db.run(`DELETE FROM order_details WHERE desk_id = ?`, desk_id);
-        return result.changes ?? 0;
+        const result = await pool.query(`DELETE FROM order_details WHERE desk_id = $1`, [desk_id]);
+        return result.rowCount ?? 0;
     }
 
     static async get(order_details_id: number) {
-        const db = await dbPromise;
-        const order = await db.get(`SELECT * FROM order_details WHERE id = ?`, order_details_id);
+        const result = await pool.query(`SELECT * FROM order_details WHERE id = $1`, [order_details_id]);
+        const order = result.rows[0];
         if (order?.garrison) {
             order.garrison = JSON.parse(order.garrison);
         }
@@ -58,9 +54,8 @@ class OrderDetail {
     }
 
     static async getAll(desk_id: number) {
-        const db = await dbPromise;
-        const orders = await db.all(`SELECT * FROM order_details WHERE desk_id = ?`, [desk_id]);
-        return orders.map(order => ({
+        const result = await pool.query(`SELECT * FROM order_details WHERE desk_id = $1`, [desk_id]);
+        return result.rows.map((order: any) => ({
             ...order,
             garrison: order.garrison ? JSON.parse(order.garrison) : null
         }));

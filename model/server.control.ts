@@ -14,7 +14,7 @@ class Server {
 
     constructor() {
         this.app = express();
-        this.port = '3000';
+        this.port = process.env.PORT || '3000'; // Use environment variable for port
         this.server = http.createServer(this.app);
         this.io = new ServerSocket(this.server, {
             cors: {

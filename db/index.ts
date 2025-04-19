@@ -1,1 +1,1 @@
-export { dbPromise } from './database';
+export { pool } from './database';

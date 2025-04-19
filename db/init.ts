@@ -1,14 +1,18 @@
-import { dbPromise } from './database';
+import { pool } from './database';
 
 (async () => {
-    const db = await dbPromise;
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS order_details (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            product_id INTEGER NOT NULL,
-            quantity INTEGER NOT NULL,
-            desk_id INTEGER NOT NULL,
-            garrison TEXT DEFAULT NULL
-        );
-    `);
+    const client = await pool.connect();
+    try {
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS order_details (
+                id SERIAL PRIMARY KEY,
+                product_id INTEGER NOT NULL,
+                quantity INTEGER NOT NULL,
+                desk_id INTEGER NOT NULL,
+                garrison TEXT DEFAULT NULL
+            );
+        `);
+    } finally {
+        client.release();
+    }
 })();
