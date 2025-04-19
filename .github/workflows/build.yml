@@ -15,9 +15,6 @@ jobs:
       actions: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -25,18 +22,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-
-      - name: Set up PostgreSQL
-        uses: harmon758/postgresql-action@v2.0.0
-        with:
-          postgresql version: '14'
-          postgresql db: 'admincontroller_test'
-          postgresql user: 'postgres'
-          postgresql password: 'admincontroller'
-
-      - name: Run database migrations
-        run: |
-          psql -U postgres -d admincontroller_test -c "CREATE TABLE IF NOT EXISTS order_details (id SERIAL PRIMARY KEY, product_id INTEGER NOT NULL, quantity INTEGER NOT NULL, desk_id INTEGER NOT NULL, garrison TEXT);"
 
       - name: Run tests
         env:
