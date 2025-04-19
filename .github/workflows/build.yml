@@ -38,11 +38,11 @@ jobs:
         run: |
           psql -U postgres -d admincontroller_test -c "CREATE TABLE IF NOT EXISTS order_details (id SERIAL PRIMARY KEY, product_id INTEGER NOT NULL, quantity INTEGER NOT NULL, desk_id INTEGER NOT NULL, garrison TEXT);"
 
-      - name: Run tests and generate coverage
+      - name: Run tests
         env:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
           POSTGRES_DB: admincontroller_test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: admincontroller
-        run: npm test -- --coverage
+        run: npm test
