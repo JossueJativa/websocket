@@ -4,6 +4,7 @@ import { pool } from './database';
     const client = await pool.connect();
     try {
         await client.query(`
+            DROP TABLE IF EXISTS order_details CASCADE;
             CREATE TABLE IF NOT EXISTS order_details (
                 id SERIAL PRIMARY KEY,
                 product_id INTEGER NOT NULL,
