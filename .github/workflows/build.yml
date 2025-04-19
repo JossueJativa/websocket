@@ -11,15 +11,15 @@ jobs:
   build:
     name: Build and Test
     runs-on: ubuntu-latest
-
     services:
       postgres:
-        image: postgres:15
+        image: postgres:13
         ports:
           - 5432:5432
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: admincontroller
+          POSTGRES_USER: 'postgres'
+          POSTGRES_PASSWORD: 'admincontroller'
+          POSTGRES_DB: 'admincontroller'
         options: >-
           --health-cmd="pg_isready -U postgres"
           --health-interval=10s

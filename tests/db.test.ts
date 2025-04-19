@@ -14,15 +14,19 @@ describe('Database Tests', () => {
     });
 
     test('Create and retrieve OrderDetail', async () => {
+        // Crear un nuevo OrderDetail con garrison como null
         const orderDetail = new OrderDetail(1, 1, 2, null);
         await OrderDetail.save(orderDetail);
 
+        // Recuperar el OrderDetail guardado
         const savedOrderDetail = await OrderDetail.get(1);
+
+        // Verificar que los datos sean correctos
         expect(savedOrderDetail).toMatchObject({
             product_id: 1,
             quantity: 1,
             desk_id: 2,
-            garrison: null,
+            garrison: null, // garrison debe ser null
         });
     });
 
