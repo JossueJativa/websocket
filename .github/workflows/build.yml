@@ -42,13 +42,6 @@ jobs:
             sleep 2
           done
 
-      - name: Create test database (if not exists)
-        run: |
-          psql -U postgres -h localhost -c "SELECT 1 FROM pg_database WHERE datname = 'admincontroller_test'" | grep -q 1 || \
-          psql -U postgres -h localhost -c "CREATE DATABASE admincontroller_test;"
-        env:
-          PGPASSWORD: admincontroller
-
       - name: Install dependencies
         run: npm install
 
