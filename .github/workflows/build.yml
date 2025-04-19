@@ -27,10 +27,28 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Set up PostgreSQL
+        uses: harmon758/postgresql-action@v2.0.0
+        with:
+          postgresql version: '14'
+          postgresql db: 'admincontroller_test'
+          postgresql user: 'postgres'
+          postgresql password: 'admincontroller'
+
+      - name: Run database migrations
+        run: |
+          psql -U postgres -d admincontroller_test -c "CREATE TABLE IF NOT EXISTS order_details (id SERIAL PRIMARY KEY, product_id INTEGER NOT NULL, quantity INTEGER NOT NULL, desk_id INTEGER NOT NULL, garrison TEXT);"
+
       - name: Run tests and generate coverage
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: admincontroller_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: admincontroller
         run: npm test -- --coverage
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v4
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} 
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
