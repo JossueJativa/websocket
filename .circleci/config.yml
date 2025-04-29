@@ -12,6 +12,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: admincontroller
           POSTGRES_DB: admincontroller
+    parallelism: 4  # ← Ejecuta el job 4 veces en paralelo
     environment:
       POSTGRES_HOST: 127.0.0.1
       POSTGRES_PORT: 5432
@@ -20,16 +21,22 @@ jobs:
       POSTGRES_DB: admincontroller_test
     steps:
       - checkout
+
       - run:
           name: Wait for PostgreSQL to be ready
-          command: |
-            dockerize -wait tcp://localhost:5432 -timeout 60s
+          command: dockerize -wait tcp://localhost:5432 -timeout 60s
+
       - run:
           name: Install dependencies
           command: npm install
+
       - run:
-          name: Run tests
-          command: npm test
+          name: Run split tests
+          command: |
+            TEST_FILES=$(circleci tests glob "tests/**/*.test.js" | circleci tests split)
+            echo "Running test files:"
+            echo "$TEST_FILES"
+            npx jest $TEST_FILES
 
 workflows:
   version: 2
