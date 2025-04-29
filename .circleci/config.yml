@@ -12,7 +12,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: admincontroller
           POSTGRES_DB: admincontroller
-    parallelism: 4
+    parallelism: 2
     environment:
       POSTGRES_HOST: 127.0.0.1
       POSTGRES_PORT: 5432
