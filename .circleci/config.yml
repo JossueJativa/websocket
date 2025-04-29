@@ -41,24 +41,15 @@ jobs:
           when: always
           command: |
             COMMIT_SHA=$(git rev-parse HEAD)
+            BUILD_STATE="success"
+            DESCRIPTION=$(if [ "$BUILD_STATE" = "success" ]; then echo "Pipeline completado exitosamente."; else echo "Pipeline fallido."; fi)
       
-            if [ "${CIRCLECI_TEST_FAILURE}" == "1" ]; then
-              BUILD_STATE="failure"
-              DESCRIPTION="Pipeline fallido."
-            else
-              BUILD_STATE="success"
-              DESCRIPTION="Pipeline completado exitosamente."
-            fi
-      
-            curl -X POST -H "Authorization: token ${CIRCLE_TOKEN}" \ 
+            curl -X POST -H "Authorization: token ${CIRCLE_TOKEN}" \
                  -H "Accept: application/vnd.github+json" \
                  -H "X-GitHub-Api-Version: 2022-11-28" \
-                 -d "{
-                   \"state\": \"${BUILD_STATE}\",
-                   \"description\": \"${DESCRIPTION}\",
-                   \"context\": \"CI/CD - CircleCI\"
-                 }" \
+                 --data "{\"state\":\"${BUILD_STATE}\",\"description\":\"${DESCRIPTION}\",\"context\":\"CI/CD - CircleCI\"}" \
                  https://api.github.com/repos/JossueJativa/websocket/statuses/${COMMIT_SHA}
+
 
 workflows:
   version: 2
