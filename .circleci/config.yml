@@ -39,5 +39,4 @@ workflows:
           filters:
             branches:
               only:
-                - main
-                - /pull\/.*/ # Pull requests
+                - circleci-project-setup
