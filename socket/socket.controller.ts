@@ -10,6 +10,11 @@ const SocketController = (socket: Socket) => {
         socket.emit('joined:desk', desk_id);
     });
 
+    socket.on('join:kitchen', () => {
+        socket.join('kitchen');
+        console.log(`Socket ${socket.id} joined kitchen channel`);
+    });
+
     socket.on('order:create', async (data, callback) => {
         const { product_id, quantity, desk_id, garrison } = data;
 
@@ -108,6 +113,20 @@ const SocketController = (socket: Socket) => {
                 callback({ message: 'No orders found to delete for the specified desk' }, null);
             }
         } catch (error: any) {
+            callback({ message: error.message }, null);
+        }
+    });
+
+    socket.on('order:sendToKitchen', async (data, callback) => {
+        const { desk_id, orderDetails } = data;
+        if (!validateDeskId(desk_id, callback)) return;
+
+        try {
+            console.log('Emitting to kitchen channel:', { desk_id, orderDetails }); // Log what is being sent to the kitchen
+            socket.to('kitchen').emit('kitchen:orderReceived', { desk_id, orderDetails });
+            callback(null, { message: 'Order sent to kitchen successfully' });
+        } catch (error: any) {
+            console.error('Error emitting to kitchen channel:', error); // Log errors
             callback({ message: error.message }, null);
         }
     });
