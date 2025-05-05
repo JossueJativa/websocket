@@ -14,8 +14,8 @@ describe('Database Tests', () => {
     });
 
     test('Create and retrieve OrderDetail', async () => {
-        // Crear un nuevo OrderDetail con garrison como null
-        const orderDetail = new OrderDetail(1, 1, 2, null);
+        // Crear un nuevo OrderDetail con garrison como lista de números
+        const orderDetail = new OrderDetail(1, 1, 2, [1, 2, 3]);
         await OrderDetail.save(orderDetail);
 
         // Recuperar el OrderDetail guardado
@@ -26,7 +26,7 @@ describe('Database Tests', () => {
             product_id: 1,
             quantity: 1,
             desk_id: 2,
-            garrison: null, // garrison debe ser null
+            garrison: [1, 2, 3], // garrison debe ser una lista de números
         });
     });
 

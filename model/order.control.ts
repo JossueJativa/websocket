@@ -1,31 +1,28 @@
-import { pool } from '../db';
+import { pool } from '../db/database';
 
 class OrderDetail {
-    product_id: number;
-    quantity: number;
-    desk_id: number;
-    garrison: number[] | null;
+    constructor(
+        public product_id: number,
+        public quantity: number,
+        public desk_id: number,
+        public garrison: number[] | null
+    ) {}
 
-    constructor(product_id: number, quantity: number, desk_id: number, garrison: number[] | null) {
-        if (!product_id || !quantity || !desk_id) {
-            throw new Error('Invalid data');
+    static async save(orderDetail: OrderDetail): Promise<void> {
+        const client = await pool.connect();
+        try {
+            await client.query(
+                'INSERT INTO order_details (product_id, quantity, desk_id, garrison) VALUES ($1, $2, $3, $4)',
+                [
+                    orderDetail.product_id,
+                    orderDetail.quantity,
+                    orderDetail.desk_id,
+                    orderDetail.garrison ? JSON.stringify(orderDetail.garrison) : null
+                ]
+            );
+        } finally {
+            client.release();
         }
-        this.product_id = product_id;
-        this.quantity = quantity;
-        this.desk_id = desk_id;
-        this.garrison = garrison;
-    }
-
-    static async save(order: OrderDetail) {
-        await pool.query(
-            `INSERT INTO order_details (product_id, quantity, desk_id, garrison) VALUES ($1, $2, $3, $4)`,
-            [
-                order.product_id,
-                order.quantity,
-                order.desk_id,
-                order.garrison ? JSON.stringify(order.garrison) : null
-            ]
-        );
     }
 
     static async update(order: OrderDetail, order_id: number) {
@@ -44,21 +41,35 @@ class OrderDetail {
         return result.rowCount ?? 0;
     }
 
-    static async get(order_details_id: number) {
-        const result = await pool.query(`SELECT * FROM order_details WHERE id = $1`, [order_details_id]);
-        const order = result.rows[0];
-        if (order?.garrison) {
-            order.garrison = JSON.parse(order.garrison);
+    static async get(id: number): Promise<OrderDetail | undefined> {
+        const client = await pool.connect();
+        try {
+            const result = await client.query('SELECT * FROM order_details WHERE id = $1', [id]);
+            if (result.rows.length > 0) {
+                const row = result.rows[0];
+                return new OrderDetail(
+                    row.product_id,
+                    row.quantity,
+                    row.desk_id,
+                    row.garrison ? JSON.parse(row.garrison) : null
+                );
+            }
+            return undefined;
+        } finally {
+            client.release();
         }
-        return order;
     }
 
-    static async getAll(desk_id: number) {
-        const result = await pool.query(`SELECT * FROM order_details WHERE desk_id = $1`, [desk_id]);
-        return result.rows.map((order: any) => ({
-            ...order,
-            garrison: order.garrison ? JSON.parse(order.garrison) : null
-        }));
+    static async getAll(desk_id: number): Promise<OrderDetail[]> {
+        const result = await pool.query('SELECT * FROM order_details WHERE desk_id = $1', [desk_id]);
+        return result.rows.map((row) =>
+            new OrderDetail(
+                row.product_id,
+                row.quantity,
+                row.desk_id,
+                row.garrison ? JSON.parse(row.garrison) : null
+            )
+        );
     }
 }
 
