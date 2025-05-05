@@ -4,7 +4,7 @@
   "description": "Websocket para la comunicación entre las distintas mesas para pedir ordenes",
   "main": "src/app.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --coverage",
     "build": "tsc",
     "start": "node src/app.js"
   },
