@@ -227,4 +227,29 @@ describe('SocketController tests', () => {
 
         expect(console.log).toHaveBeenCalledWith('User disconnected', mockSocket.id);
     });
+
+    it('should handle join:kitchen event', () => {
+        SocketController(mockSocket as Socket);
+
+        const joinKitchenHandler = (mockSocket.on as jest.Mock).mock.calls.find(call => call[0] === 'join:kitchen')[1];
+        joinKitchenHandler();
+
+        expect(mockSocket.join).toHaveBeenCalledWith('kitchen');
+        expect(console.log).toHaveBeenCalledWith(`Socket ${mockSocket.id} joined kitchen channel`);
+    });
+
+    it('should handle order:sendToKitchen event successfully', async () => {
+        SocketController(mockSocket as Socket);
+
+        const sendToKitchenHandler = (mockSocket.on as jest.Mock).mock.calls.find(call => call[0] === 'order:sendToKitchen')[1];
+        const callback = jest.fn();
+
+        const data = { desk_id: 1, orderDetails: [{ product_id: '123', quantity: 2 }] };
+
+        await sendToKitchenHandler(data, callback);
+
+        expect(mockSocket.to).toHaveBeenCalledWith('kitchen');
+        expect(mockSocket.to('kitchen').emit).toHaveBeenCalledWith('kitchen:orderReceived', data);
+        expect(callback).toHaveBeenCalledWith(null, { message: 'Order sent to kitchen successfully' });
+    });
 });
