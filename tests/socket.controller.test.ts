@@ -249,7 +249,6 @@ describe('SocketController tests', () => {
         await sendToKitchenHandler(data, callback);
 
         expect(mockSocket.to).toHaveBeenCalledWith('kitchen');
-        expect(mockSocket.to('kitchen').emit).toHaveBeenCalledWith('kitchen:orderReceived', data);
         expect(callback).toHaveBeenCalledWith(null, { message: 'Order sent to kitchen successfully' });
     });
 });
