@@ -53,3 +53,10 @@ jobs:
           POSTGRES_DB: admincontroller_test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: admincontroller
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          projectBaseDir: .
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
