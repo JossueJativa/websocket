@@ -13,9 +13,6 @@ RUN npm install
 # Copia el resto de los archivos del proyecto
 COPY . .
 
-# Recompila los binarios de sqlite3 para la arquitectura del contenedor
-RUN npm rebuild sqlite3
-
 # Compila el proyecto TypeScript a JavaScript
 RUN npm run build
 

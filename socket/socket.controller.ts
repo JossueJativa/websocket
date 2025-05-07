@@ -12,7 +12,6 @@ const SocketController = (socket: Socket) => {
 
     socket.on('join:kitchen', () => {
         socket.join('kitchen');
-        console.log(`Socket ${socket.id} joined kitchen channel`);
     });
 
     socket.on('order:create', async (data, callback) => {
@@ -122,7 +121,6 @@ const SocketController = (socket: Socket) => {
         if (!validateDeskId(desk_id, callback)) return;
 
         try {
-            console.log('Emitting to kitchen channel:', { desk_id, orderDetails }); // Log what is being sent to the kitchen
             socket.to('kitchen').emit('kitchen:orderReceived', { desk_id, orderDetails });
             callback(null, { message: 'Order sent to kitchen successfully' });
         } catch (error: any) {
