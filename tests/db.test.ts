@@ -18,8 +18,12 @@ describe('Database Tests', () => {
         const orderDetail = new OrderDetail(1, 1, 2, [1, 2, 3]);
         await OrderDetail.save(orderDetail);
 
+        console.log('OrderDetail saved:', orderDetail);
+
         // Recuperar el OrderDetail guardado
         const savedOrderDetail = await OrderDetail.get(1);
+
+        console.log('OrderDetail retrieved:', savedOrderDetail);
 
         // Verificar que los datos sean correctos
         expect(savedOrderDetail).toMatchObject({

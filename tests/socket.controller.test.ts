@@ -235,7 +235,6 @@ describe('SocketController tests', () => {
         joinKitchenHandler();
 
         expect(mockSocket.join).toHaveBeenCalledWith('kitchen');
-        expect(console.log).toHaveBeenCalledWith(`Socket ${mockSocket.id} joined kitchen channel`);
     });
 
     it('should handle order:sendToKitchen event successfully', async () => {

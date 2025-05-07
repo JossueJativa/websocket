@@ -12,6 +12,7 @@ const SocketController = (socket: Socket) => {
 
     socket.on('join:kitchen', () => {
         socket.join('kitchen');
+        socket.emit('joined:kitchen', 'kitchen');
     });
 
     socket.on('order:create', async (data, callback) => {
