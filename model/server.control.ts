@@ -14,13 +14,14 @@ class Server {
 
     constructor() {
         this.app = express();
-        this.port = process.env.PORT || '3000'; // Use environment variable for port
+        this.port = process.env.PORT || '3000';
         this.server = http.createServer(this.app);
         this.io = new ServerSocket(this.server, {
+            path: "/ws/socket.io",
             cors: {
-                origin: '*'
-            },
-            transports: ['websocket']
+                origin: ["https://bistroalpasoar.com", "http://localhost:5173"], // agrega tus orígenes permitidos
+                methods: ["GET", "POST"]
+            }
         });
 
         this.middlewares();
